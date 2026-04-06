@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "install:all": "npm install",
+    "dev": "pm2 start ecosystem.config.js",
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:rest-api": "npm run dev --workspace=rest-api",
     "dev:sessions-api": "npm run dev --workspace=sessions-api",

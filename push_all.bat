@@ -1,13 +1,13 @@
-﻿@echo off
+@echo off
 
-set repos=.^ docs frontend git-agent sessions-api users-api
+set repos=. docs frontend git-agent rest-api sessions-api users-api
 
 for %%r in (%repos%) do (
     echo =========================
     echo Pushing %%r...
     echo =========================
 
-    cd %%r
+    pushd %%r
 
     git add .
 
@@ -15,7 +15,7 @@ for %%r in (%repos%) do (
 
     git push
 
-    cd ..
+    popd
 )
 
 echo.

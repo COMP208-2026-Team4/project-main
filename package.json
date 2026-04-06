@@ -1,7 +1,7 @@
 {
   "name": "cone",
   "version": "0.1.0",
-  "description": "Cone — lightweight Git hosting and productivity platform (COMP208 Team 4)",
+  "description": "Cone -> lightweight Git hosting and productivity platform (COMP208 Team 4)",
   "private": true,
   "workspaces": [
     "docs",

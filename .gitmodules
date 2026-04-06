@@ -1,0 +1,18 @@
+[submodule "docs"]
+	path = docs
+	url = https://github.com/COMP208-2026-Team4/docs
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/COMP208-2026-Team4/frontend.git
+[submodule "git-agent"]
+	path = git-agent
+	url = https://github.com/COMP208-2026-Team4/git-agent
+[submodule "rest-api"]
+	path = rest-api
+	url = https://github.com/COMP208-2026-Team4/rest-api
+[submodule "sessions-api"]
+	path = sessions-api
+	url = https://github.com/COMP208-2026-Team4/sessions-api.git
+[submodule "users-api"]
+	path = users-api
+	url = https://github.com/COMP208-2026-Team4/users-api

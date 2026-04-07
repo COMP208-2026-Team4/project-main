@@ -1,0 +1,134 @@
+services:
+
+  # ──────────────────────────────────────────────
+  # Database
+  # ──────────────────────────────────────────────
+  mariadb:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 15s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────
+  # API Gateway / Reverse Proxy  →  localhost:3000
+  # ──────────────────────────────────────────────
+  rest-api:
+    build: ./rest-api
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      NODE_ENV: "development"
+      JWT_SECRET: "change-me-to-a-long-random-secret"
+    volumes:
+      - ./rest-api:/app
+      - /app/node_modules
+      # Override config.yaml with Docker-aware service URLs
+      - ./rest-api/config.docker.yaml:/app/config.yaml:ro
+    depends_on:
+      - users-api
+      - sessions-api
+      - git-agent
+
+  # ──────────────────────────────────────────────
+  # Users API  →  localhost:6024
+  # ──────────────────────────────────────────────
+  users-api:
+    build: ./users-api
+    ports:
+      - "6024:6024"
+    environment:
+      PORT: "6024"
+      DATABASE_URL: "mysql://root:password@mariadb:3306/users"
+      JWT_SECRET: "change-me-to-a-long-random-secret"
+      JWT_EXPIRY: "7d"
+      GOOGLE_CLIENT_ID: "google-client-id"
+      GOOGLE_CLIENT_SECRET: "google-client-secret"
+      GOOGLE_REDIRECT_URI: http://localhost:3000/auth/google/callback
+      FRONTEND_URL: "http://localhost:5173"
+    volumes:
+      - ./users-api:/app
+      - /app/node_modules
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Sessions API  →  localhost:6023
+  # ──────────────────────────────────────────────
+  sessions-api:
+    build: ./sessions-api
+    ports:
+      - "6023:6023"
+    environment:
+      PORT: "6023"
+      DATABASE_URL: "mysql://root:password@mariadb:3306/sessions"
+    volumes:
+      - ./sessions-api:/app
+      - /app/node_modules
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Git Agent (Rust)  →  localhost:6025
+  # ──────────────────────────────────────────────
+  git-agent:
+    build: ./git-agent
+    ports:
+      - "6025:6025"
+    environment:
+      PORT: "6025"
+      JWT_SECRET: "change-me-to-a-long-random-secret"
+      REPOS_DIR: "/app/repos"
+    volumes:
+      - ./git-agent/src:/app/src
+      - ./git-agent/Cargo.toml:/app/Cargo.toml:ro
+      - ./git-agent/Cargo.lock:/app/Cargo.lock:ro
+      - git_agent_target:/app/target
+      - cargo_registry:/usr/local/cargo/registry
+      - git_repos:/app/repos
+
+  # ──────────────────────────────────────────────
+  # Frontend (Vite + React)  →  localhost:5173
+  # ──────────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Vite inlines VITE_* vars at dev-server startup.
+      # Browsers connect to localhost:3000, so this stays as-is.
+      VITE_API_URL: "http://localhost:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - rest-api
+
+  # ──────────────────────────────────────────────
+  # Docs (Docusaurus)  →  localhost:6054
+  # ──────────────────────────────────────────────
+  docs:
+    build: ./docs
+    ports:
+      - "6054:6054"
+    volumes:
+      - ./docs:/app
+      - /app/node_modules
+
+volumes:
+  mariadb_data:
+  git_agent_target:
+  cargo_registry:
+  git_repos:

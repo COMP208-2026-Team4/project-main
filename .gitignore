@@ -1,4 +1,5 @@
 .claude
+docker-compose.yml
 
 # Root-level node_modules installed by npm workspaces
 node_modules/

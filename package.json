@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "killannoyingports": "npx kill-port 3000",
+    "docker": "docker-compose up -d --build",
     "install:all": "npm install",
     "dev": "pm2 start ecosystem.config.js",
     "dev:frontend": "npm run dev --workspace=frontend",

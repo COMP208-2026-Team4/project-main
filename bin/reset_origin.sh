@@ -12,14 +12,13 @@ for r in $repos; do
         echo "gitdir: ../.git/modules/$r" > "$r/.git"
     fi
 
-    pushd "$r" > /dev/null
+    (
+        cd "$r"
 
-    git fetch
-    git reset --hard origin/main
-
-    popd > /dev/null
+        git fetch
+        git reset --hard origin/main
+    )
 done
 
 echo ""
 echo "Done resetting all repositories."
-read -p "Press Enter to continue..."

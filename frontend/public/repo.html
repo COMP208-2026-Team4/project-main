@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-white dark:bg-black">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>project</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="description" content=""/>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+   <link rel="stylesheet" type='text/css' href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css"/> 
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Handlee&display=swap');
+      :root { --font-sans: "DM Sans", sans-serif; }
+      .lucide { stroke-width: 1.4; }
+    </style>
+    <link rel="icon" href="favicon.png">
+  </head>
+  <body class="text-black/80 dark:text-white/80 min-h-screen grid grid-cols-[auto_1fr] grid-rows-[calc(var(--spacing)_*_16)_1fr] m-0">
+    <!-- Header -->
+    <div class="bg-black/6 dark:bg-black col-span-full grid grid-cols-[1fr_1fr_1fr] h-16 place-items-center  bg-clip-padding border-b border-black/20 dark:border-white/20">
+      <!-- Left -->
+      <div class="size-16 grid place-self-start">
+        <a href="/" class="place-self-center">
+          <div class="relative size-10 m-auto" id="logo">
+            <div class="mask-[url(/assets/logo.svg)] mask-cover size-full bg-radial-[at_var(--x,_100%)_var(--y,_100%)] from-cyan-300 to-fuchsia-900 hover:brightness-100 brightness-60 transition-[filter]"></div>
+          </div>
+        </a>
+      </div>
+      <!-- Center -->
+      <button class="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 text-black/60 hover:bg-black/8 hover:dark:bg-white/10 dark:text-white/60 w-full grid grid-cols-[auto_1fr_auto] items-center cursor-pointer">
+        <div class="size-5"></div>
+        <div class="leading-5">Type <kbd class="inline-block rounded-md bg-clip-padding border border-black/20 dark:border-white/20 w-5 font-mono"><span class="inline-block translate-y-px">/</span></kbd> to search</div>
+        <i data-lucide="search" class="text-black/60 dark:text-white/60 size-5"></i>
+      </button>
+      <!-- Right -->
+      <div class="grid grid-flow-col gap-2 place-items-center h-full place-self-end pr-3">
+        <button class="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 hover:bg-black/8 hover:dark:bg-white/10 text-white/40 grid grid-flow-col cursor-pointer">
+          <i data-lucide="plus" class="text-black/60 dark:text-white/60 size-5 mr-1"></i>
+          <i data-lucide="chevron-down" class="text-black/60 dark:text-white/60 size-4 my-auto"></i>
+        </button>
+        <button class="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 hover:bg-black/8 hover:dark:bg-white/10 text-white/40 cursor-pointer">
+          <i data-lucide="tickets" class="text-black/60 dark:text-white/60 size-5"></i>
+        </button>
+        <button class="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 hover:bg-black/8 hover:dark:bg-white/10 text-white/40 cursor-pointer">
+          <i data-lucide="book-marked" class="text-black/60 dark:text-white/60 size-5"></i>
+        </button>
+        <button class="relative p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 hover:bg-black/8 hover:dark:bg-white/10 text-white/40 cursor-pointer">
+          <i data-lucide="inbox" class="text-black/60 dark:text-white/60 size-5"></i>
+          <div class="absolute bg-cyan-600 size-2 rounded-full top-1 right-1"></div>
+        </button>
+        <button class="grid items-center rounded-md overflow-clip w-full cursor-pointer" onclick="toggleHidden('usermenu')" id="usermenu-btn">
+          <img class="h-10" src="/assets/jsmith.png"/>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+
+    <div class="bg-black/6 dark:bg-black h-full p-4 bg-clip-padding border-r border-black/20 dark:border-white/20 grid grid-rows-[auto_1fr_auto] w-64" id="sidebar">
+      <div class="grid grid-flow-row place-items-center">
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2 mb-2" href="#">
+          <img class="size-5 rounded-sm" src="/assets/acme.co.png"/>
+          <span class="place-self-start my-auto">ACME Corp.</span>
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="/tickets.html">
+          <i data-lucide="tickets" class="size-5 text-black/60 dark:text-white/60"></i>
+          Tickets
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="#">
+          <i data-lucide="panels-top-left" class="size-5 text-black/60 dark:text-white/60"></i>
+          Projects
+          <i data-lucide="chevron-right" class="size-4 my-auto"></i>
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="#">
+          <i data-lucide="book" class="size-5 text-black/60 dark:text-white/60"></i>
+          Wiki
+          <i data-lucide="chevron-right" class="size-4 my-auto"></i>
+        </a>
+        <hr class="border-black/20 dark:border-white/20 rounded-full m-4 w-full">
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2 mb-2" href="/repo.html">
+          <div class="block items-center rounded-sm overflow-clip bg-clip-padding border border-lime-600/30 dark:border-lime-800/30 bg-lime-600/20 dark:bg-lime-800/20 size-5 grid place-items-center">
+            <div class="text-xs text-lime-600 dark:text-lime-700 -translate-y-px">
+              C
+            </div>
+          </div>
+          <span class="place-self-start my-auto">cone</span>
+        </a>
+        <a class="block items-center rounded-lg bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="/repo.html">
+          <i data-lucide="code" class="size-5 text-black/60 dark:text-white/60"></i>
+          Code
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="#">
+          <i data-lucide="circle-dot" class="size-5 text-black/60 dark:text-white/60"></i>
+          Issues
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="#">
+          <i data-lucide="git-pull-request-arrow" class="size-5 text-black/60 dark:text-white/60"></i>
+          Pull Requests
+        </a>
+        <h4 class="m-2 place-self-start font-[600]">Projects</h4>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="/kanban.html">
+          <div class="block items-center rounded-sm overflow-clip bg-clip-padding border border-cyan-600/30 dark:border-cyan-800/30 bg-cyan-600/20 dark:bg-cyan-800/20 size-5 grid place-items-center">
+            <div class="text-xs text-cyan-600 dark:text-cyan-700 -translate-y-px">
+              F
+            </div>
+          </div>
+          Frontend
+        </a>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr_auto] gap-2" href="#">
+          <div class="block items-center rounded-sm overflow-clip bg-clip-padding border border-amber-600/30 dark:border-amber-800/30 bg-amber-600/20 dark:bg-amber-800/20 size-5 grid place-items-center">
+            <div class="text-xs text-amber-600 dark:text-amber-700 -translate-y-px">
+              B
+            </div>
+          </div>
+          Backend
+        </a>
+      </div>
+      <div></div>
+      <div>
+        <a class="block items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full grid grid-cols-[auto_1fr] gap-2" href="#">
+          <i data-lucide="arrow-left-to-line" class="size-5 text-black/60 dark:text-white/60"></i>
+          Collapse sidebar
+        </a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="grid grid-cols-[1fr_auto] grid-rows-[auto_1fr] dark:bg-white/8 h-[calc(100vh_-_var(--spacing)_*_16)]">
+      <div class="border-b border-black/20 dark:border-white/20 h-12 col-span-full grid grid-cols-[auto_1fr] place-items-center pl-4 pr-2">
+        <div class="grid grid-flow-col gap-2">
+          <a class="grid grid-flow-col gap-2 place-items-center hover:underline" href="#">
+            <img class="size-5 rounded-sm" src="/assets/acme.co.png"/>
+            acme.co
+          </a>
+          <span class="opacity-50">/</span>
+          <a class="font-bold grid grid-flow-col gap-2 place-items-center" href="#">
+            <div class="block items-center rounded-sm overflow-clip bg-clip-padding border border-lime-600/30 dark:border-lime-800/30 bg-lime-600/20 dark:bg-lime-800/20 size-5 grid place-items-center">
+              <div class="text-xs text-lime-600 dark:text-lime-700 -translate-y-px">
+                C
+              </div>
+            </div>
+            <span class="hover:underline">
+              cone
+            </span>
+          </a>
+        </div>
+        <div class="grid grid-flow-col gap-[1px] place-self-end my-auto">
+          <button class="py-1 px-3 rounded-l-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
+            <i data-lucide="star" class="size-5"></i>
+            <span class="font-bold">Star</span>
+          </button>
+          <button class="py-1 px-3 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
+            <span class="font-bold">278</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="h-full grid grid-rows-[auto_auto_auto_1fr]">
+        <div class="h-12 grid grid-cols-[auto_1fr] place-items-center px-2  bg-clip-padding border-b border-black/20 dark:border-white/20">
+          <button class="py-1 px-2 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer grid grid-flow-col place-items-center gap-2">
+            <i data-lucide="git-branch" class="size-5"></i>
+            <span class="font-mono translate-y-px">main</span>
+            <i data-lucide="chevron-down" class="size-4 my-auto"></i>
+          </button>
+          <button class="py-1 px-2 rounded-lg bg-green-400/70 dark:bg-green-400/70 hover:bg-green-400/90 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/80 place-self-end my-auto">
+            <span class="font-bold">Code</span>
+            <i data-lucide="chevron-down" class="size-4 my-auto"></i>
+          </button>
+        </div>
+
+        <div class="p-2 grid grid-cols-[auto_1fr_auto_auto] gap-2  bg-clip-padding border-b border-black/20 dark:border-white/20">
+          <a href="#" class="block rounded-md overflow-clip size-12">
+            <img src="/assets/jsmith.png"/>
+          </a>
+          <div class="grid grid-flow-row">
+            <div class="font-[700]">
+              feat(auth): add JWT refresh token rotation support
+            </div>
+            <div>
+              <a href="#" class="hover:underline">John Smith</a> <span class="text-black/50 dark:text-white/50">authored 4 days ago and committed 3 days ago.</span>
+            </div>
+          </div>
+          <div class="grid grid-flow-col my-auto">
+            <div class="py-1 px-3 rounded-l-lg bg-black/10 dark:bg-white/10 grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60">
+              <span class="font-mono translate-y-px">884d29e5</span>
+            </div>
+            <button class="py-1 px-2 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60">
+              <i data-lucide="copy" class="size-4"></i>
+            </button>
+          </div>
+          <button class="py-1 px-2 rounded-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 my-auto h-8 mr-2 font-[500]">
+            History
+          </button>
+        </div>
+
+        <table class="table-fixed  bg-clip-padding border-b border-black/20 dark:border-white/20">
+          <thead>
+            <tr class="h-12 bg-black/8 dark:bg-white/8">
+              <th class="w-[40%] text-left pl-4">Name</th>
+              <th class="w-[40%] text-left">Last commit</th>
+              <th class="w-[20%] text-right pr-4">Last update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i data-lucide="folder" class="size-4"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i data-lucide="folder" class="size-4"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i data-lucide="folder" class="size-4"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i data-lucide="folder" class="size-4"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i class="devicon-typescript-plain"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i class="devicon-markdown-original"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            <tr class="bg-black/2 dark:bg-white/2  bg-clip-padding border-t border-white dark:border-black">
+              <td class="h-12 pl-4 flex flex-auto-col place-items-center gap-4">
+                <i class="devicon-rust-original"></i>
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-32"></div>
+              </td>
+              <td class="h-12">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-64"></div>
+              </td>
+              <td class="h-12 pr-4">
+                <div class="h-2 bg-black/16 dark:bg-white/16 rounded-full w-24 ml-auto"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div>
+          <div class="h-12 bg-black/8 dark:bg-white/8 font-[500] grid grid-cols-[auto_auto_1fr] place-items-center bg-clip-padding border-b border-black/20 dark:border-white/20">
+            <i data-lucide="file-text" class="size-5 inline mx-4"></i>
+            README.md
+          </div>
+          <div class="p-8">
+            <h1 id="cone" class="text-3xl font-bold mb-2">Cone</h1>
+            <blockquote class="place-items-center bg-clip-padding border-l-4 border-black/20 dark:border-white/20 p-2 pl-4 my-2 bg-black/6 dark:bg-white/3">
+              <p>A modern, open-source Git productivity suite that seamlessly combines project management and developer ergonomics.</p>
+            </blockquote>
+            <p>Cone integrates source control, issue tracking, code review, and project planning into one fast, developer-first platform. Self-host it, extend it, and own your workflow.</p>
+            <hr class="my-4 border-black/20 dark:border-white/20">
+            <h2 class="text-2xl font-bold my-4" id="features">✨ Features</h2>
+            <ul class="list-disc pl-8">
+              <li>🧠 <strong>Unified Workflows</strong> — Issues, pull requests, and commits are deeply linked.</li>
+              <li>⚡ <strong>Blazing Fast UI</strong> — Built for performance and minimal friction.</li>
+              <li>🔐 <strong>Self-Hosted First</strong> — Full control over your data.</li>
+              <li>🔄 <strong>Git Native</strong> — Designed around Git, not bolted onto it.</li>
+              <li>📊 <strong>Agile &amp; Beyond</strong> — Kanban, sprints, roadmaps, milestones.</li>
+              <li>🔌 <strong>Extensible</strong> — Plugin system + API.</li>
+            </ul>
+            <hr class="my-4 border-black/20 dark:border-white/20">
+            <h2 class="text-2xl font-bold my-2" id="quick-start">🚀 Quick Start</h2>
+<pre class="p-4 mt-4 rounded-lg bg-black/4 dark:bg-white/4"><code class="lang-bash"><span class="hljs-comment"># Clone the repository</span>
+git <span class="hljs-built_in">clone</span> https://github.com/your-org/cone.git
+
+<span class="hljs-built_in">cd</span> cone
+
+<span class="hljs-comment"># Start with Docker</span>
+docker compose up <span class="hljs-_">-d</span>
+</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-l border-black/20 dark:border-white/20 h-full w-80 p-4 flex flex-col gap-2">
+        <div>
+          <h4 class="font-bold">
+            Project information
+          </h4>
+          A modern, open-source git productivity suite.
+        </div>
+        <div class="mt-1 h-2.5 w-full overflow-clip rounded-full grid grid-cols-[55%_25%_10%_10%] gap-[1px]">
+          <span class="w-full bg-amber-600"></span>
+          <span class="w-full bg-sky-600"></span>
+          <span class="w-full bg-lime-600"></span>
+          <span class="w-full bg-gray-400"></span>
+        </div>
+        <hr class="border-black/20 dark:border-white/20 rounded-full my-1">
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="git-commit-horizontal" class="size-5 inline"></i>
+          <span class="font-bold">5000</span> Commits
+        </a>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="git-branch" class="size-5 inline"></i>
+          <span class="font-bold">4</span> Branches
+        </a>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="tag" class="size-5 inline"></i>
+          <span class="font-bold">26</span> Tags
+        </a>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="rocket" class="size-5 inline"></i>
+          <span class="font-bold">18</span> Releases
+        </a>
+        <hr class="border-black/20 dark:border-white/20 rounded-full my-1">
+        <h4 class="font-bold">
+          Pinned
+        </h4>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="file-text" class="size-5 inline"></i>
+          README
+        </a>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="file-text" class="size-5 inline"></i>
+          CONTRIBUTING
+        </a>
+        <a href="#" class="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <i data-lucide="scale" class="size-5 inline"></i>
+          GPLv3 License
+        </a>
+        <hr class="border-black/20 dark:border-white/20 rounded-full my-1">
+        <div>
+          <h4 class="font-bold">
+            Created on
+          </h4>
+          February 02, 2026
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating -->
+
+    <div class="absolute bg-clip-padding border rounded-xl border-black/20 dark:border-white/20 bg-white dark:bg-black right-2 top-16 p-2 grid shadow-md/10 dark:shadow-md/60" id="usermenu" hidden>
+      <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-center p-1 w-56" href="#">
+        <img class="h-10 rounded-md" src="/assets/jsmith.png"/>
+        <div>
+          <div class="font-bold leading-5">
+            John Smith
+          </div>
+          <div class="font-normal text-black/50 dark:text-white/50 text-sm/5">
+            (jsmith)
+          </div>
+        </div>
+        <a class="ml-auto p-2 rounded-lg hover:bg-black/8 hover:dark:bg-white/10 cursor-pointer">
+          <i data-lucide="users" class="size-5"></i>
+        </a>
+      </div>
+      <hr class="border-black/20 dark:border-white/20 rounded-full m-1">
+      <a class="grid grid-cols-[auto_1fr] gap-2 items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 p-1" href="#">
+        <i data-lucide="smile" class="mx-auto size-5"></i>
+        <div>Set Status</div>
+      </a>
+      <a class="grid grid-cols-[auto_1fr] gap-2 items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 p-1" href="#">
+        <i data-lucide="user" class="mx-auto size-5"></i>
+        <div>Edit Profile</div>
+      </a>
+      <a class="grid grid-cols-[auto_1fr] gap-2 items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 p-1" href="#">
+        <i data-lucide="settings" class="mx-auto size-5"></i>
+        <div>Preferences</div>
+      </a>
+      <hr class="border-black/20 dark:border-white/20 rounded-full m-1">
+      <a class="grid grid-cols-[auto_1fr] gap-2 items-center rounded-lg hover:bg-black/8 hover:dark:bg-white/10 p-1" href="#">
+        <i data-lucide="log-out" class="mx-auto size-5"></i>
+        <div>Sign out</div>
+      </a>
+    </div>
+
+  </body>
+  <script>
+    lucide.createIcons();
+
+    // Applies `non-scaling-stroke` on all lucide icons so scaling preserves
+    // stroke width
+    Array.from(document.getElementsByClassName("lucide"))
+      .map(elem => {
+          Array.from(elem.children)
+            .map(child => {
+              child.setAttribute("vector-effect", "non-scaling-stroke")
+            });
+      });
+
+    let toggleHidden = id => {
+      document.getElementById(id).toggleAttribute('hidden');
+    }
+
+    let sidebar = document.getElementById('sidebar');
+    let sidebar_btn = document.getElementById('sidebar-btn')
+
+    sidebar.addEventListener('click', e => {
+      e.stopPropagation();
+    });
+
+    let usermenu = document.getElementById('usermenu');
+    let usermenu_btn = document.getElementById('usermenu-btn')
+
+    usermenu.addEventListener('click', e => {
+      e.stopPropagation();
+    });
+
+    document.addEventListener('click', e => {
+      //if (!sidebar.hasAttribute('hidden')
+      //    && !sidebar.contains(e.target)
+      //    && !sidebar_btn.contains(e.target)) {
+      //  sidebar.toggleAttribute('hidden');
+      //}
+
+      if (!usermenu.hasAttribute('hidden')
+          && !usermenu.contains(e.target)
+          && !usermenu_btn.contains(e.target)) {
+        usermenu.toggleAttribute('hidden');
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!e.keyCode == 27) {
+        return;
+      }
+
+      //if (!sidebar.hasAttribute('hidden')) {
+      //  sidebar.toggleAttribute('hidden');
+      //}
+
+      if (!usermenu.hasAttribute('hidden')) {
+        usermenu.toggleAttribute('hidden');
+      }
+    });
+
+    let useGradient = e => {
+        let rect = e.target.getBoundingClientRect();
+        e.target.style.setProperty('--x', e.clientX - rect.left + "px");
+        e.target.style.setProperty('--y', e.clientY - rect.top + "px");
+    };
+
+    document.getElementById("logo").addEventListener('mousemove', useGradient);
+  </script>
+</html>

@@ -1,0 +1,14 @@
+# Public routes — JWT validation is skipped for these paths.
+# The OAuth flow must be reachable before the user has a token.
+public_routes:
+  - /auth
+
+# Proxied microservice routes
+routes:
+  /auth: http://localhost:6024        # users-api  (OAuth + registration — public)
+  /users: http://localhost:6024       # users-api  (profile CRUD — protected)
+  /sessions: http://localhost:6023    # sessions-api
+  /git: http://localhost:6025         # git-agent  (Rust)
+  /repositories: http://localhost:6025  # git-agent repositories endpoint
+  /reviews: http://localhost:6026     # reviews-api  (future)
+  /tickets: http://localhost:6027     # tickets-api  (future)

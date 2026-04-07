@@ -1,0 +1,2 @@
+export const notInArray = (arr: any[]) => (old: any) => !arr.some(e => e.id === old.id);
+export const uniqueBy = (key: string) => (v: any, i: number, a: any[]) => a.findIndex(t => (t[key] === v[key])) === i;

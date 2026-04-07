@@ -1,0 +1,6 @@
+screens/*
+node_modules
+dist
+*.local
+
+.vercel

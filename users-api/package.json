@@ -1,0 +1,36 @@
+{
+  "name": "users-api",
+  "version": "1.0.0",
+  "description": "Users microservice for Cone platform",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "tsx src/app.ts",
+    "dev": "tsx watch src/app.ts",
+    "build": "tsc",
+    "test": "tsx --test src/**/*.test.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "postinstall": "npm run prisma:generate"
+  },
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/adapter-mariadb": "^7.4.1",
+    "@prisma/client": "^7.4.1",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^24.10.13",
+    "prisma": "^7.4.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -21,9 +21,6 @@ REM Run database migrations
 call :run_migrations
 if %ERRORLEVEL% neq 0 exit /b 1
 
-REM Setup git submodules
-call :setup_submodules
-
 echo.
 echo ============================================
 echo  Setup complete!
@@ -208,15 +205,3 @@ docker-compose stop mariadb >nul 2>&1
 echo.
 exit /b 0
 
-:setup_submodules
-echo [5/5] Setting up git submodules...
-
-git submodule update --init --recursive >nul 2>&1
-if %ERRORLEVEL% equ 0 (
-    echo   - Git submodules initialized
-) else (
-    echo   - No submodules to initialize or already initialized
-)
-
-echo.
-exit /b 0

@@ -7,6 +7,11 @@ for r in $repos; do
     echo "Resetting $r..."
     echo "========================="
 
+    if [ "$r" != "." ]; then
+        echo "Fixing .git path for submodule $r..."
+        echo "gitdir: ../.git/modules/$r" > "$r/.git"
+    fi
+
     pushd "$r" > /dev/null
 
     git fetch

@@ -30,6 +30,7 @@ services:
       PORT: "3000"
       NODE_ENV: "development"
       JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: "http://localhost:5173"
     volumes:
       - ./rest-api:/app
       - /app/node_modules

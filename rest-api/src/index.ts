@@ -27,7 +27,11 @@ if (process.env.VERCEL !== '1') {
   });
 }
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cone.opportune.work';
+const FRONTEND_URL = process.env.FRONTEND_URL;
+if (!FRONTEND_URL) {
+  console.error('[Config] FRONTEND_URL environment variable is not set. CORS will block all browser requests.');
+  process.exit(1);
+}
 
 app.use(cors({
   origin: FRONTEND_URL,
@@ -87,13 +91,11 @@ Object.entries(config.routes).forEach(([routePath, target]) => {
     target,
     changeOrigin: true,
     logLevel: 'debug',
-    onProxyRes: (proxyRes, req) => {
-      const origin = req.headers['origin'] as string | undefined;
-      if (origin === FRONTEND_URL) {
-        proxyRes.headers['access-control-allow-origin'] = FRONTEND_URL;
-        proxyRes.headers['access-control-allow-credentials'] = 'true';
-      }
-      // Remove any CORS headers set by upstream services to avoid duplicates
+    onProxyRes: (proxyRes) => {
+      // Strip all upstream CORS headers — the cors() middleware on this proxy
+      // is the single source of truth for Access-Control-* headers.
+      delete proxyRes.headers['access-control-allow-origin'];
+      delete proxyRes.headers['access-control-allow-credentials'];
       delete proxyRes.headers['access-control-allow-methods'];
       delete proxyRes.headers['access-control-allow-headers'];
     },

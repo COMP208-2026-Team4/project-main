@@ -1,6 +1,16 @@
 .claude
-docker-compose.yml
+.windsurf
+.env
+#docker-compose.yml
 
 # Root-level node_modules installed by npm workspaces
 node_modules/
 package-lock.json
+
+# Sub-repositories (separate git repos)
+docs/
+frontend/
+git-agent/
+rest-api/
+sessions-api/
+users-api/

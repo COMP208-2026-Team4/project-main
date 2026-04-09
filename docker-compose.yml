@@ -20,7 +20,7 @@ services:
       retries: 5
 
   # ──────────────────────────────────────────────
-  # API Gateway / Reverse Proxy  →  localhost:3000
+  # API Gateway / Reverse Proxy  →  localhost:3001
   # ──────────────────────────────────────────────
   rest-api:
     build: ./rest-api
@@ -28,15 +28,10 @@ services:
       - "${REST_API_PORT}:${REST_API_PORT}"
     environment:
       PORT: ${REST_API_PORT}
-      NODE_ENV: ${NODE_ENV}
-      JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
       USERS_API_URL: http://users-api:${USERS_API_PORT}
       SESSIONS_API_URL: http://sessions-api:${SESSIONS_API_PORT}
       GIT_AGENT_URL: http://git-agent:${GIT_AGENT_PORT}
-    volumes:
-      - ./rest-api:/app
-      - /app/node_modules
     depends_on:
       - users-api
       - sessions-api

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import ReactMarkdown from "react-markdown";
 import {
   Star,
   GitBranch,
@@ -246,7 +245,7 @@ const RepoPage: React.FC = () => {
                 {readmeEntry.name}
               </div>
               <div className="p-8">
-                <ReactMarkdown>{decodedReadme}</ReactMarkdown>
+                <pre className="whitespace-pre-wrap break-words text-sm leading-6">{decodedReadme}</pre>
               </div>
             </div>
           )}

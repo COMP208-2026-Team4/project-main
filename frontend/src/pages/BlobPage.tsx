@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import ReactMarkdown from "react-markdown";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import FileEditorModal from "../components/FileEditorModal";
@@ -101,9 +100,9 @@ const BlobPage: React.FC = () => {
             <div className="text-black/60 dark:text-white/60">Binary file not shown.</div>
           )}
           {blob && !blob.isBinary && isMarkdown && (
-            <div className="prose dark:prose-invert max-w-none">
-              <ReactMarkdown>{decoded}</ReactMarkdown>
-            </div>
+            <pre className="p-4 rounded-lg bg-black/4 dark:bg-white/4 overflow-x-auto whitespace-pre-wrap break-words">
+              <code className="font-mono text-sm whitespace-pre-wrap">{decoded}</code>
+            </pre>
           )}
           {blob && !blob.isBinary && !isMarkdown && (
             <pre className="p-4 rounded-lg bg-black/4 dark:bg-white/4 overflow-x-auto">

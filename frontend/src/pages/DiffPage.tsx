@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { fetchDiff } from "../store/git";
+import { selectUser } from "../store/auth";
 
 const formatDate = (epochSeconds: number) =>
   new Date(epochSeconds * 1000).toLocaleString();
@@ -21,11 +22,14 @@ const DiffPage: React.FC = () => {
   const dispatch = useDispatch() as any;
   const diff = useSelector((s: Store.AppState) => s.entities.git.diff);
   const loading = useSelector((s: Store.AppState) => s.entities.git.loading);
+  const user = useSelector(selectUser);
 
   useEffect(() => {
-    if (userId && repoId && sha)
+    // Wait for auth hydration to complete before firing the diff request -
+    // direct-loading /commit/:sha used to race the JWT resolution.
+    if (user && userId && repoId && sha)
       dispatch(fetchDiff(userId, repoId, sha));
-  }, [userId, repoId, sha]);
+  }, [user?.id, userId, repoId, sha]);
 
   const lines = useMemo(() => (diff?.diff ?? "").split("\n"), [diff]);
 

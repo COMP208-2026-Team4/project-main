@@ -12,6 +12,8 @@ declare namespace Store {
 
   interface GitState {
     branches: Entity.Branch[];
+    /** Symbolic HEAD branch reported by git-agent, used as the default. */
+    head: string | null;
     commits: Entity.Commit[];
     tree: Entity.TreeEntry[];
     treeRef: string;

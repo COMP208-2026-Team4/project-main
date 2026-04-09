@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Star,
@@ -18,6 +18,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import FileEditorModal from "../components/FileEditorModal";
 import { fetchBranches, fetchCommits, fetchTree, fetchBlob, actions as gitActions } from "../store/git";
+import { selectUser } from "../store/auth";
 
 const SkeletonFileRow: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
   <tr className="bg-black/2 dark:bg-white/2 bg-clip-padding border-t border-white dark:border-black">
@@ -45,23 +46,69 @@ const relativeTime = (epochSeconds: number) => {
 
 const RepoPage: React.FC = () => {
   const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
+  const navigate = useNavigate();
   const dispatch = useDispatch() as any;
   const git = useSelector((s: Store.AppState) => s.entities.git);
+  const user = useSelector(selectUser);
 
-  const [selectedBranch, setSelectedBranch] = useState("main");
+  // Backwards-compatibility: if the URL still uses the legacy numeric `sub`
+  // for the owner segment but the authenticated user owns it, redirect to
+  // the canonical username URL so links/refresh stay consistent.
+  useEffect(() => {
+    if (!user || !userId || !repoId) return;
+    if (userId === user.id && user.username && user.username !== userId) {
+      navigate(`/${user.username}/${repoId}/repo`, { replace: true });
+    }
+  }, [user?.id, user?.username, userId, repoId]);
+
+  // `selectedBranch` is null until we know the repo's real default branch.
+  // This eliminates the cold-load race where we used to dispatch tree/commits
+  // calls hard-coded to "main" before fetchBranches resolved.
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState("");
   const [showEditor, setShowEditor] = useState(false);
 
+  // Step 1: when the route or user changes, reset the cached repo state and
+  // kick off the branch lookup. We gate on `user` so direct-load (refresh)
+  // doesn't fire requests before the auth hydration finishes - the JWT in
+  // localStorage is still attached, but waiting for `user` keeps the
+  // page's ownership-resolution logic deterministic.
+  useEffect(() => {
+    if (!userId || !repoId || !user) return;
+    dispatch(gitActions.repoReset());
+    setSelectedBranch(null);
+    setCurrentPath("");
+    dispatch(fetchBranches(userId, repoId));
+  }, [userId, repoId, user?.id]);
+
+  // Step 2: once branches arrive, choose the canonical branch (HEAD reported
+  // by the backend, falling back to the first branch). This is what makes
+  // direct-loaded repo pages succeed even when the default branch isn't
+  // "main".
+  useEffect(() => {
+    if (selectedBranch !== null) return;
+    if (git.head) {
+      setSelectedBranch(git.head);
+      return;
+    }
+    if (git.branches.length > 0) {
+      setSelectedBranch(git.branches[0].name);
+    }
+  }, [git.head, git.branches, selectedBranch]);
+
+  // Step 3: once we have a real branch, fetch tree + commits.
+  useEffect(() => {
+    if (!userId || !repoId || !user || !selectedBranch) return;
+    dispatch(fetchTree(userId, repoId, selectedBranch, currentPath));
+    dispatch(fetchCommits(userId, repoId, selectedBranch, 1));
+  }, [userId, repoId, user?.id, selectedBranch, currentPath]);
+
   const refresh = () => {
-    if (!userId || !repoId) return;
+    if (!userId || !repoId || !selectedBranch) return;
     dispatch(fetchBranches(userId, repoId));
     dispatch(fetchTree(userId, repoId, selectedBranch, currentPath));
     dispatch(fetchCommits(userId, repoId, selectedBranch, 1));
   };
-
-  useEffect(() => {
-    refresh();
-  }, [userId, repoId, selectedBranch, currentPath]);
 
   const lastCommit = git.commits[0];
 
@@ -71,7 +118,7 @@ const RepoPage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (readmeEntry && userId && repoId) {
+    if (readmeEntry && userId && repoId && selectedBranch) {
       const fullPath = currentPath ? `${currentPath}/${readmeEntry.name}` : readmeEntry.name;
       dispatch(fetchBlob(userId, repoId, selectedBranch, fullPath));
     } else {
@@ -124,12 +171,12 @@ const RepoPage: React.FC = () => {
           <div className="h-12 grid grid-cols-[auto_auto_1fr_auto] place-items-center px-2 gap-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
             <div className="relative grid place-items-center">
               <select
-                value={selectedBranch}
+                value={selectedBranch ?? ""}
                 onChange={(e) => { setSelectedBranch(e.target.value); setCurrentPath(""); }}
                 className="appearance-none py-1 pl-8 pr-8 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer font-mono"
               >
                 {git.branches.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
-                {!git.branches.find((b) => b.name === selectedBranch) && (
+                {selectedBranch && !git.branches.find((b) => b.name === selectedBranch) && (
                   <option value={selectedBranch}>{selectedBranch}</option>
                 )}
               </select>
@@ -179,7 +226,7 @@ const RepoPage: React.FC = () => {
                 </button>
               </div>
               <Link
-                to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch}`}
+                to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch ?? ""}`}
                 className="py-1 px-2 rounded-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 my-auto h-8 mr-2 font-[500]"
               >
                 History
@@ -221,7 +268,7 @@ const RepoPage: React.FC = () => {
                           >{entry.name}</button>
                         ) : (
                           <Link
-                            to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch}&path=${encodeURIComponent(fullPath)}`}
+                            to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch ?? ""}&path=${encodeURIComponent(fullPath)}`}
                             className="hover:underline"
                           >{entry.name}</Link>
                         )}
@@ -259,7 +306,7 @@ const RepoPage: React.FC = () => {
           </div>
           <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
           <Link
-            to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch}`}
+            to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch ?? ""}`}
             className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center"
           >
             <GitCommitHorizontal className="size-5 inline" />
@@ -281,7 +328,7 @@ const RepoPage: React.FC = () => {
           <h4 className="font-bold">Pinned</h4>
           {readmeEntry && (
             <Link
-              to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch}&path=${encodeURIComponent(readmeEntry.name)}`}
+              to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch ?? ""}&path=${encodeURIComponent(readmeEntry.name)}`}
               className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center"
             >
               <FileText className="size-5 inline" />
@@ -295,7 +342,7 @@ const RepoPage: React.FC = () => {
         </div>
       </div>
 
-      {showEditor && userId && repoId && (
+      {showEditor && userId && repoId && selectedBranch && (
         <FileEditorModal
           owner={userId}
           repo={repoId}

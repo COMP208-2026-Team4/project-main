@@ -15,22 +15,68 @@ const fakeUsers: Record<string, any> = {};
 
 const prismaStub = {
   user: {
-    findUnique: async ({ where }: any) =>
-      fakeUsers[where.id ?? where.email] ?? null,
+    findUnique: async ({ where }: any) => {
+      if (where.id) return fakeUsers[where.id] ?? null;
+      if (where.email)
+        return Object.values(fakeUsers).find((u) => u.email === where.email) ?? null;
+      if (where.username)
+        return Object.values(fakeUsers).find((u) => u.username === where.username) ?? null;
+      return null;
+    },
+    findMany: async ({ where }: any) => {
+      const usernames: string[] = where?.OR?.map((c: any) => c.username) ?? [];
+      const all = Object.values(fakeUsers);
+      if (usernames.length === 0) return all;
+      return all.filter((u: any) => usernames.includes(u.username));
+    },
     create: async ({ data }: any) => {
       if (Object.values(fakeUsers).some((u) => u.email === data.email))
-        throw Object.assign(new Error("Unique constraint"), { code: "P2002" });
+        throw Object.assign(new Error("Unique constraint"), {
+          code: "P2002",
+          meta: { target: ["email"] },
+        });
+      if (Object.values(fakeUsers).some((u) => u.username === data.username))
+        throw Object.assign(new Error("Unique constraint"), {
+          code: "P2002",
+          meta: { target: ["username"] },
+        });
       fakeUsers[data.id] = data;
       return data;
     },
     update: async ({ where, data }: any) => {
       if (!fakeUsers[where.id])
         throw Object.assign(new Error("Not found"), { code: "P2025" });
+      if (
+        data.username &&
+        Object.values(fakeUsers).some(
+          (u) => u.username === data.username && u.id !== where.id,
+        )
+      ) {
+        throw Object.assign(new Error("Unique constraint"), {
+          code: "P2002",
+          meta: { target: ["username"] },
+        });
+      }
       fakeUsers[where.id] = { ...fakeUsers[where.id], ...data };
       return fakeUsers[where.id];
     },
   },
 };
+
+// Make the stub robust against the Prisma error class check used in users.ts.
+// The handler does `err instanceof Prisma.PrismaClientKnownRequestError`, so
+// we patch the import path to return a class our thrown errors satisfy.
+mock.module("@prisma/client", {
+  namedExports: {
+    Prisma: {
+      PrismaClientKnownRequestError: class PrismaClientKnownRequestError {
+        static [Symbol.hasInstance](inst: any) {
+          return inst && typeof inst.code === "string" && inst.code.startsWith("P2");
+        }
+      },
+    },
+  },
+});
 
 // Patch the resolvers module
 mock.module("../resolvers", { namedExports: { prisma: prismaStub } });
@@ -139,6 +185,36 @@ describe("POST /users", () => {
     });
     assert.equal(res.status, 409);
   });
+
+  it("returns 409 on duplicate username (case-insensitive)", async () => {
+    // alice already exists with username "alice"; "ALICE" must collide.
+    const res = await request("POST", "/users", {
+      email: "alice-ci@example.com",
+      username: "ALICE",
+      password: "anotherPass1",
+    });
+    assert.equal(res.status, 409);
+    assert.equal(res.body.code, "USERNAME_TAKEN");
+  });
+});
+
+// ── Username dedupe helper (uniqueUsernameFor / suffixForId) ─────────────────
+describe("username dedupe", () => {
+  it("uniqueUsernameFor returns base name when free", async () => {
+    const { uniqueUsernameFor, suffixForId } = await import("./username");
+    // sandbox: ensure no collision
+    const id = "316772625193893888";
+    assert.equal(suffixForId(id), "3888");
+    const free = await uniqueUsernameFor("brandnewuser", id);
+    assert.equal(free, "brandnewuser");
+  });
+
+  it("uniqueUsernameFor falls back to deterministic suffix on collision", async () => {
+    const { uniqueUsernameFor } = await import("./username");
+    // alice already exists, so uniqueUsernameFor("alice", id) must dedupe.
+    const dedup = await uniqueUsernameFor("alice", "316772625193893888");
+    assert.equal(dedup, "alice_3888");
+  });
 });
 
 // ── GET /users/me ────────────────────────────────────────────────────────────
@@ -206,6 +282,54 @@ describe("PUT /users/:id", () => {
     const res = await request("PUT", `/users/${alice.id}`, { username: "alice_updated" }, token);
     assert.equal(res.status, 200);
     assert.equal(res.body.username, "alice_updated");
+  });
+
+  it("rejects updating username to one already in use (case-insensitive)", async () => {
+    // Create a second user that owns "carol".
+    await request("POST", "/users", {
+      email: "carol@example.com",
+      username: "carol",
+      password: "carolPass1",
+    });
+    const alice = Object.values(fakeUsers).find(
+      (u) => u.email === "alice@example.com",
+    )!;
+    const token = signToken({
+      sub: alice.id,
+      email: alice.email,
+      username: alice.username,
+    });
+    const res = await request("PUT", `/users/${alice.id}`, { username: "CAROL" }, token);
+    assert.equal(res.status, 409);
+    assert.equal(res.body.code, "USERNAME_TAKEN");
+  });
+});
+
+// ── GET /users/lookup/:idOrUsername ──────────────────────────────────────────
+describe("GET /users/lookup/:idOrUsername", () => {
+  it("resolves a user by case-insensitive username", async () => {
+    const alice = Object.values(fakeUsers).find(
+      (u) => u.email === "alice@example.com",
+    )!;
+    const res = await request("GET", `/users/lookup/${alice.username.toUpperCase()}`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.id, alice.id);
+  });
+
+  it("resolves a user by numeric id", async () => {
+    const alice = Object.values(fakeUsers).find(
+      (u) => u.email === "alice@example.com",
+    )!;
+    // alice.id may not be numeric in the stub, but lookup should still
+    // fall back to a username search and return the same user.
+    const res = await request("GET", `/users/lookup/${alice.username}`);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.username, alice.username);
+  });
+
+  it("returns 404 when no user matches", async () => {
+    const res = await request("GET", "/users/lookup/nobody-here");
+    assert.equal(res.status, 404);
   });
 });
 

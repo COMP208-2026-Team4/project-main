@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, GitBranch, ChevronDown, GitCommitHorizontal } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import { fetchBranches, fetchCommits } from "../store/git";
+import { fetchBranches, fetchCommits, actions as gitActions } from "../store/git";
+import { selectUser } from "../store/auth";
 
 const relativeTime = (epochSeconds: number) => {
   const diff = Math.floor(Date.now() / 1000) - epochSeconds;
@@ -17,20 +18,34 @@ const relativeTime = (epochSeconds: number) => {
 const CommitsPage: React.FC = () => {
   const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const branch = searchParams.get("branch") ?? "main";
+  // `branch` may be missing on direct load - resolve via fetched HEAD below.
+  const branchParam = searchParams.get("branch");
   const dispatch = useDispatch() as any;
   const git = useSelector((s: Store.AppState) => s.entities.git);
+  const user = useSelector(selectUser);
   const [page, setPage] = useState(1);
 
+  // Reset cached repo state and fetch branches whenever the route changes.
+  // Gate on `user` so direct-load doesn't fire before auth hydration.
   useEffect(() => {
-    if (!userId || !repoId) return;
+    if (!userId || !repoId || !user) return;
+    dispatch(gitActions.repoReset());
     setPage(1);
     dispatch(fetchBranches(userId, repoId));
+  }, [userId, repoId, user?.id]);
+
+  // Resolve which branch to show: explicit query param wins, otherwise the
+  // backend-reported HEAD, otherwise the first branch in the list.
+  const branch = branchParam ?? git.head ?? git.branches[0]?.name ?? null;
+
+  // Fetch commits as soon as we know the real branch.
+  useEffect(() => {
+    if (!userId || !repoId || !user || !branch) return;
     dispatch(fetchCommits(userId, repoId, branch, 1));
-  }, [userId, repoId, branch]);
+  }, [userId, repoId, user?.id, branch]);
 
   const loadMore = () => {
-    if (!userId || !repoId) return;
+    if (!userId || !repoId || !branch) return;
     const next = page + 1;
     setPage(next);
     dispatch(fetchCommits(userId, repoId, branch, next));
@@ -53,12 +68,12 @@ const CommitsPage: React.FC = () => {
         <div className="h-12 px-4 flex items-center gap-2 border-b border-black/20 dark:border-white/20">
           <div className="relative grid place-items-center">
             <select
-              value={branch}
+              value={branch ?? ""}
               onChange={(e) => setSearchParams({ branch: e.target.value })}
               className="appearance-none py-1 pl-8 pr-8 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer font-mono"
             >
               {git.branches.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
-              {!git.branches.find((b) => b.name === branch) && (
+              {branch && !git.branches.find((b) => b.name === branch) && (
                 <option value={branch}>{branch}</option>
               )}
             </select>

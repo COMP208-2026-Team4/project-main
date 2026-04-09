@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { prisma } from "../resolvers";
 import { generateSnowflake } from "../snowflake";
 import { signToken } from "../middleware/auth";
+import { uniqueUsernameFor } from "./username";
 
 const router = express.Router();
 
@@ -139,9 +140,9 @@ router.get("/google/callback", async (req: Request, res: Response) => {
 
     if (!user) {
       const id = generateSnowflake();
-      // Derive a username from the display name; ensure uniqueness with snowflake suffix
-      const baseUsername = googleUser.name.replace(/\s+/g, "").toLowerCase();
-      const username = `${baseUsername}_${id.slice(-4)}`;
+      // Derive a username from the display name and ensure uniqueness using
+      // the shared dedupe helper (case-insensitive, deterministic suffix).
+      const username = await uniqueUsernameFor(googleUser.name, id);
 
       user = await prisma.user.create({
         data: {

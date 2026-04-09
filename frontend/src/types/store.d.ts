@@ -10,6 +10,18 @@ declare namespace Store {
     avatarUrl?: string;
   }
 
+  interface GitState {
+    branches: Entity.Branch[];
+    commits: Entity.Commit[];
+    tree: Entity.TreeEntry[];
+    treeRef: string;
+    treePath: string;
+    blob: Entity.Blob | null;
+    diff: Entity.CommitDiff | null;
+    loading: boolean;
+    error: string | null;
+  }
+
   export interface AppState {
     auth: {
       user: AuthUser | null;
@@ -18,6 +30,7 @@ declare namespace Store {
     entities: {
       users: Entity.User[];
       sessions: Entity.Session[];
+      git: GitState;
     };
   }
 

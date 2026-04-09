@@ -1,3 +1,7 @@
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import ReactMarkdown from "react-markdown";
 import {
   Star,
   GitBranch,
@@ -9,8 +13,12 @@ import {
   Tag,
   Rocket,
   Scale,
+  Plus,
+  ArrowLeft,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import FileEditorModal from "../components/FileEditorModal";
+import { fetchBranches, fetchCommits, fetchTree, fetchBlob, actions as gitActions } from "../store/git";
 
 const SkeletonFileRow: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
   <tr className="bg-black/2 dark:bg-white/2 bg-clip-padding border-t border-white dark:border-black">
@@ -27,7 +35,66 @@ const SkeletonFileRow: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
   </tr>
 );
 
+const relativeTime = (epochSeconds: number) => {
+  const diff = Math.floor(Date.now() / 1000) - epochSeconds;
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
+  return `${Math.floor(diff / 2592000)}mo ago`;
+};
+
 const RepoPage: React.FC = () => {
+  const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
+  const dispatch = useDispatch() as any;
+  const git = useSelector((s: Store.AppState) => s.entities.git);
+
+  const [selectedBranch, setSelectedBranch] = useState("main");
+  const [currentPath, setCurrentPath] = useState("");
+  const [showEditor, setShowEditor] = useState(false);
+
+  const refresh = () => {
+    if (!userId || !repoId) return;
+    dispatch(fetchBranches(userId, repoId));
+    dispatch(fetchTree(userId, repoId, selectedBranch, currentPath));
+    dispatch(fetchCommits(userId, repoId, selectedBranch, 1));
+  };
+
+  useEffect(() => {
+    refresh();
+  }, [userId, repoId, selectedBranch, currentPath]);
+
+  const lastCommit = git.commits[0];
+
+  const readmeEntry = useMemo(
+    () => git.tree.find((e) => /^readme\.(md|markdown)$/i.test(e.name)),
+    [git.tree],
+  );
+
+  useEffect(() => {
+    if (readmeEntry && userId && repoId) {
+      const fullPath = currentPath ? `${currentPath}/${readmeEntry.name}` : readmeEntry.name;
+      dispatch(fetchBlob(userId, repoId, selectedBranch, fullPath));
+    } else {
+      dispatch(gitActions.blobFetched(null));
+    }
+  }, [readmeEntry?.sha, userId, repoId, selectedBranch]);
+
+  const decodedReadme = useMemo(() => {
+    if (!git.blob || git.blob.isBinary) return "";
+    try {
+      return decodeURIComponent(escape(atob(git.blob.content)));
+    } catch {
+      return "";
+    }
+  }, [git.blob]);
+
+  const goUp = () => {
+    const parts = currentPath.split("/").filter(Boolean);
+    parts.pop();
+    setCurrentPath(parts.join("/"));
+  };
+
   return (
     <>
       <Sidebar variant="repo" />
@@ -35,17 +102,11 @@ const RepoPage: React.FC = () => {
         {/* Breadcrumb */}
         <div className="border-b border-black/20 dark:border-white/20 h-12 col-span-full grid grid-cols-[auto_1fr] place-items-center pl-4 pr-2">
           <div className="grid grid-flow-col gap-2">
-            <a className="grid grid-flow-col gap-2 place-items-center hover:underline" href="#">
-              <img className="size-5 rounded-sm" src="/assets/acme.co.png" alt="ACME" />
-              acme.co
-            </a>
+            <Link className="grid grid-flow-col gap-2 place-items-center hover:underline" to={`/${userId}`}>
+              {userId}
+            </Link>
             <span className="opacity-50">/</span>
-            <a className="font-bold grid grid-flow-col gap-2 place-items-center" href="#">
-              <div className="block items-center rounded-sm overflow-clip bg-clip-padding border border-lime-600/30 dark:border-lime-800/30 bg-lime-600/20 dark:bg-lime-800/20 size-5 grid place-items-center">
-                <div className="text-xs text-lime-600 dark:text-lime-700 -translate-y-px">C</div>
-              </div>
-              <span className="hover:underline">cone</span>
-            </a>
+            <span className="font-bold">{repoId}</span>
           </div>
           <div className="grid grid-flow-col gap-[1px] place-self-end my-auto">
             <button className="py-1 px-3 rounded-l-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
@@ -53,112 +114,142 @@ const RepoPage: React.FC = () => {
               <span className="font-bold">Star</span>
             </button>
             <button className="py-1 px-3 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
-              <span className="font-bold">278</span>
+              <span className="font-bold">{git.branches.length}</span>
             </button>
           </div>
         </div>
 
         {/* Main content */}
-        <div className="h-full grid grid-rows-[auto_auto_auto_1fr]">
+        <div className="h-full grid grid-rows-[auto_auto_auto_1fr] overflow-auto">
           {/* Branch bar */}
-          <div className="h-12 grid grid-cols-[auto_1fr] place-items-center px-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
-            <button className="py-1 px-2 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer grid grid-flow-col place-items-center gap-2">
-              <GitBranch className="size-5" />
-              <span className="font-mono translate-y-px">main</span>
-              <ChevronDown className="size-4 my-auto" />
-            </button>
-            <button className="py-1 px-2 rounded-lg bg-green-400/70 dark:bg-green-400/70 hover:bg-green-400/90 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/80 place-self-end my-auto">
-              <span className="font-bold">Code</span>
-              <ChevronDown className="size-4 my-auto" />
+          <div className="h-12 grid grid-cols-[auto_auto_1fr_auto] place-items-center px-2 gap-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
+            <div className="relative grid place-items-center">
+              <select
+                value={selectedBranch}
+                onChange={(e) => { setSelectedBranch(e.target.value); setCurrentPath(""); }}
+                className="appearance-none py-1 pl-8 pr-8 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer font-mono"
+              >
+                {git.branches.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
+                {!git.branches.find((b) => b.name === selectedBranch) && (
+                  <option value={selectedBranch}>{selectedBranch}</option>
+                )}
+              </select>
+              <GitBranch className="size-4 absolute left-2 pointer-events-none" />
+              <ChevronDown className="size-4 absolute right-2 pointer-events-none" />
+            </div>
+            {currentPath && (
+              <button
+                onClick={goUp}
+                className="py-1 px-2 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer grid grid-flow-col place-items-center gap-2"
+              >
+                <ArrowLeft className="size-4" />
+                <span className="text-sm font-mono">/{currentPath}</span>
+              </button>
+            )}
+            <span />
+            <button
+              onClick={() => setShowEditor(true)}
+              className="py-1 px-3 rounded-lg bg-green-400/70 hover:bg-green-400/90 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/80 my-auto font-bold"
+            >
+              <Plus className="size-4" />
+              Add file
             </button>
           </div>
 
           {/* Last commit */}
-          <div className="p-2 grid grid-cols-[auto_1fr_auto_auto] gap-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
-            <a href="#" className="block rounded-md overflow-clip size-12">
-              <img src="/assets/jsmith.png" alt="John Smith" />
-            </a>
-            <div className="grid grid-flow-row">
-              <div className="font-[700]">
-                feat(auth): add JWT refresh token rotation support
+          {lastCommit && (
+            <div className="p-2 grid grid-cols-[1fr_auto_auto] gap-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
+              <div className="grid grid-flow-row pl-2">
+                <div className="font-[700] truncate">{lastCommit.message.split("\n")[0]}</div>
+                <div>
+                  <span className="hover:underline">{lastCommit.authorName}</span>{" "}
+                  <span className="text-black/50 dark:text-white/50">
+                    committed {relativeTime(lastCommit.timestamp)}
+                  </span>
+                </div>
               </div>
-              <div>
-                <a href="#" className="hover:underline">John Smith</a>{" "}
-                <span className="text-black/50 dark:text-white/50">
-                  authored 4 days ago and committed 3 days ago.
-                </span>
+              <div className="grid grid-flow-col my-auto">
+                <div className="py-1 px-3 rounded-l-lg bg-black/10 dark:bg-white/10 grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60">
+                  <span className="font-mono translate-y-px">{lastCommit.sha.slice(0, 8)}</span>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(lastCommit.sha)}
+                  className="py-1 px-2 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60"
+                >
+                  <Copy className="size-4" />
+                </button>
               </div>
+              <Link
+                to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch}`}
+                className="py-1 px-2 rounded-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 my-auto h-8 mr-2 font-[500]"
+              >
+                History
+              </Link>
             </div>
-            <div className="grid grid-flow-col my-auto">
-              <div className="py-1 px-3 rounded-l-lg bg-black/10 dark:bg-white/10 grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60">
-                <span className="font-mono translate-y-px">884d29e5</span>
-              </div>
-              <button className="py-1 px-2 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/60 dark:text-white/60">
-                <Copy className="size-4" />
-              </button>
-            </div>
-            <button className="py-1 px-2 rounded-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2 my-auto h-8 mr-2 font-[500]">
-              History
-            </button>
-          </div>
+          )}
 
           {/* File table */}
           <table className="table-fixed bg-clip-padding border-b border-black/20 dark:border-white/20">
             <thead>
               <tr className="h-12 bg-black/8 dark:bg-white/8">
                 <th className="w-[40%] text-left pl-4">Name</th>
-                <th className="w-[40%] text-left">Last commit</th>
-                <th className="w-[20%] text-right pr-4">Last update</th>
+                <th className="w-[40%] text-left">Type</th>
+                <th className="w-[20%] text-right pr-4">Size</th>
               </tr>
             </thead>
             <tbody>
-              <SkeletonFileRow icon={<Folder className="size-4" />} />
-              <SkeletonFileRow icon={<Folder className="size-4" />} />
-              <SkeletonFileRow icon={<Folder className="size-4" />} />
-              <SkeletonFileRow icon={<Folder className="size-4" />} />
-              <SkeletonFileRow icon={<i className="devicon-typescript-plain" />} />
-              <SkeletonFileRow icon={<i className="devicon-markdown-original" />} />
-              <SkeletonFileRow icon={<i className="devicon-rust-original" />} />
+              {git.loading && git.tree.length === 0 && (
+                <>
+                  <SkeletonFileRow icon={<Folder className="size-4" />} />
+                  <SkeletonFileRow icon={<Folder className="size-4" />} />
+                  <SkeletonFileRow icon={<FileText className="size-4" />} />
+                </>
+              )}
+              {git.tree.map((entry) => {
+                const fullPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
+                const isFolder = entry.type === "tree";
+                return (
+                  <tr key={entry.sha + entry.name} className="bg-black/2 dark:bg-white/2 bg-clip-padding border-t border-white dark:border-black hover:bg-black/4 dark:hover:bg-white/4">
+                    <td className="h-12 pl-4">
+                      <div className="flex items-center gap-3">
+                        {isFolder
+                          ? <Folder className="size-4 text-sky-600 dark:text-sky-400" />
+                          : <FileText className="size-4 text-black/60 dark:text-white/60" />}
+                        {isFolder ? (
+                          <button
+                            onClick={() => setCurrentPath(fullPath)}
+                            className="hover:underline cursor-pointer"
+                          >{entry.name}</button>
+                        ) : (
+                          <Link
+                            to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch}&path=${encodeURIComponent(fullPath)}`}
+                            className="hover:underline"
+                          >{entry.name}</Link>
+                        )}
+                      </div>
+                    </td>
+                    <td className="h-12 text-black/60 dark:text-white/60">{entry.type}</td>
+                    <td className="h-12 pr-4 text-right text-black/60 dark:text-white/60">
+                      {entry.size != null ? `${entry.size} B` : ""}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
           {/* README */}
-          <div>
-            <div className="h-12 bg-black/8 dark:bg-white/8 font-[500] grid grid-cols-[auto_auto_1fr] place-items-center bg-clip-padding border-b border-black/20 dark:border-white/20">
-              <FileText className="size-5 inline mx-4" />
-              README.md
+          {readmeEntry && decodedReadme && (
+            <div>
+              <div className="h-12 bg-black/8 dark:bg-white/8 font-[500] grid grid-cols-[auto_auto_1fr] place-items-center bg-clip-padding border-b border-black/20 dark:border-white/20">
+                <FileText className="size-5 inline mx-4" />
+                {readmeEntry.name}
+              </div>
+              <div className="p-8">
+                <ReactMarkdown>{decodedReadme}</ReactMarkdown>
+              </div>
             </div>
-            <div className="p-8">
-              <h1 id="cone" className="text-3xl font-bold mb-2">Cone</h1>
-              <blockquote className="place-items-center bg-clip-padding border-l-4 border-black/20 dark:border-white/20 p-2 pl-4 my-2 bg-black/6 dark:bg-white/3">
-                <p>A modern, open-source Git productivity suite that seamlessly combines project management and developer ergonomics.</p>
-              </blockquote>
-              <p>Cone integrates source control, issue tracking, code review, and project planning into one fast, developer-first platform. Self-host it, extend it, and own your workflow.</p>
-              <hr className="my-4 border-black/20 dark:border-white/20" />
-              <h2 className="text-2xl font-bold my-4" id="features">✨ Features</h2>
-              <ul className="list-disc pl-8">
-                <li>🧠 <strong>Unified Workflows</strong> — Issues, pull requests, and commits are deeply linked.</li>
-                <li>⚡ <strong>Blazing Fast UI</strong> — Built for performance and minimal friction.</li>
-                <li>🔐 <strong>Self-Hosted First</strong> — Full control over your data.</li>
-                <li>🔄 <strong>Git Native</strong> — Designed around Git, not bolted onto it.</li>
-                <li>📊 <strong>Agile &amp; Beyond</strong> — Kanban, sprints, roadmaps, milestones.</li>
-                <li>🔌 <strong>Extensible</strong> — Plugin system + API.</li>
-              </ul>
-              <hr className="my-4 border-black/20 dark:border-white/20" />
-              <h2 className="text-2xl font-bold my-2" id="quick-start">🚀 Quick Start</h2>
-              <pre className="p-4 mt-4 rounded-lg bg-black/4 dark:bg-white/4">
-                <code className="lang-bash">
-{`# Clone the repository
-git clone https://github.com/your-org/cone.git
-
-cd cone
-
-# Start with Docker
-docker compose up -d`}
-                </code>
-              </pre>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Right sidebar */}
@@ -167,50 +258,54 @@ docker compose up -d`}
             <h4 className="font-bold">Project information</h4>
             A modern, open-source git productivity suite.
           </div>
-          <div className="mt-1 h-2.5 w-full overflow-clip rounded-full grid grid-cols-[55%_25%_10%_10%] gap-[1px]">
-            <span className="w-full bg-amber-600" />
-            <span className="w-full bg-sky-600" />
-            <span className="w-full bg-lime-600" />
-            <span className="w-full bg-gray-400" />
-          </div>
           <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <Link
+            to={`/${userId}/${repoId}/repo/commits?branch=${selectedBranch}`}
+            className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center"
+          >
             <GitCommitHorizontal className="size-5 inline" />
-            <span className="font-bold">5000</span> Commits
-          </a>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+            <span className="font-bold">{git.commits.length}</span> Commits
+          </Link>
+          <a className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
             <GitBranch className="size-5 inline" />
-            <span className="font-bold">4</span> Branches
+            <span className="font-bold">{git.branches.length}</span> Branches
           </a>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <a className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
             <Tag className="size-5 inline" />
-            <span className="font-bold">26</span> Tags
+            <span className="font-bold">0</span> Tags
           </a>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          <a className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
             <Rocket className="size-5 inline" />
-            <span className="font-bold">18</span> Releases
+            <span className="font-bold">0</span> Releases
           </a>
           <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
           <h4 className="font-bold">Pinned</h4>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
-            <FileText className="size-5 inline" />
-            README
-          </a>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
-            <FileText className="size-5 inline" />
-            CONTRIBUTING
-          </a>
-          <a href="#" className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
+          {readmeEntry && (
+            <Link
+              to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch}&path=${encodeURIComponent(readmeEntry.name)}`}
+              className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center"
+            >
+              <FileText className="size-5 inline" />
+              {readmeEntry.name}
+            </Link>
+          )}
+          <a className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
             <Scale className="size-5 inline" />
-            GPLv3 License
+            License
           </a>
-          <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
-          <div>
-            <h4 className="font-bold">Created on</h4>
-            February 02, 2026
-          </div>
         </div>
       </div>
+
+      {showEditor && userId && repoId && (
+        <FileEditorModal
+          owner={userId}
+          repo={repoId}
+          branch={selectedBranch}
+          mode="create"
+          onClose={() => setShowEditor(false)}
+          onSaved={refresh}
+        />
+      )}
     </>
   );
 };

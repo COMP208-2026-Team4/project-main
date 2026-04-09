@@ -45,7 +45,7 @@ const CreateRepoModal: React.FC<Props> = ({ onClose }) => {
           "Content-Type": "application/json",
           ...getHeaders(),
         },
-        body: JSON.stringify({ name: name.trim(), userId: user?.id }),
+        body: JSON.stringify({ name: name.trim(), user_id: user?.id }),
       });
 
       if (!res.ok) {

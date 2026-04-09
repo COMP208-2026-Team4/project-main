@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Sidebar from "../components/Sidebar";
 import CreateRepoModal from "../components/CreateRepoModal";
 import { selectUser } from "../store/auth";
+import { getHeaders } from "../store/utils/rest-headers";
+
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+interface Repository {
+  id: string;
+  name: string;
+  owner: string;
+  path: string;
+  created_at: string;
+}
 
 /**
  * Dashboard — the main protected page shown after login.
@@ -11,6 +22,26 @@ import { selectUser } from "../store/auth";
 const DashboardPage: React.FC = () => {
   const user = useSelector(selectUser);
   const [showCreateRepo, setShowCreateRepo] = useState(false);
+  const [repos, setRepos] = useState<Repository[]>([]);
+  const [loadingRepos, setLoadingRepos] = useState(true);
+
+  const fetchRepos = async () => {
+    setLoadingRepos(true);
+    try {
+      const res = await fetch(`${API_URL}/repositories`, {
+        headers: getHeaders(),
+      });
+      if (res.ok) {
+        setRepos(await res.json());
+      }
+    } finally {
+      setLoadingRepos(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRepos();
+  }, []);
 
   return (
     <>
@@ -31,16 +62,37 @@ const DashboardPage: React.FC = () => {
           Your repositories and recent activity will appear here.
         </p>
 
-        {/* Placeholder for repository list */}
         <div className="grid gap-3 content-start">
-          <div className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm text-black/40 dark:text-white/40">
-            No repositories yet. Create one to get started.
-          </div>
+          {loadingRepos ? (
+            <div className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm text-black/40 dark:text-white/40">
+              Loading repositories…
+            </div>
+          ) : repos.length === 0 ? (
+            <div className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm text-black/40 dark:text-white/40">
+              No repositories yet. Create one to get started.
+            </div>
+          ) : (
+            repos.map((repo) => (
+              <div
+                key={repo.id}
+                className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm flex items-center justify-between">
+                <span className="font-medium dark:text-white">{repo.name}</span>
+                {repo.created_at && (
+                  <span className="text-black/40 dark:text-white/40 text-xs">
+                    {new Date(repo.created_at).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
 
       {showCreateRepo && (
-        <CreateRepoModal onClose={() => setShowCreateRepo(false)} />
+        <CreateRepoModal onClose={() => {
+          setShowCreateRepo(false);
+          fetchRepos();
+        }} />
       )}
     </>
   );

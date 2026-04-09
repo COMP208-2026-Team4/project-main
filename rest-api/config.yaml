@@ -3,12 +3,15 @@
 public_routes:
   - /auth
 
-# Proxied microservice routes
+# Proxied microservice routes.
+# Values support ${VAR} / ${VAR:-default} env-var expansion so the same
+# config works for local dev (set USERS_API_URL=http://localhost:6024 …) and
+# inside Docker Compose (defaults below resolve to the service hostnames).
 routes:
-  /auth: http://localhost:6024        # users-api  (OAuth + registration — public)
-  /users: http://localhost:6024       # users-api  (profile CRUD — protected)
-  /sessions: http://localhost:6023    # sessions-api
-  /git: http://localhost:6025         # git-agent  (Rust)
-  /repositories: http://localhost:6025  # git-agent repositories endpoint
-  /reviews: http://localhost:6026     # reviews-api  (future)
-  /tickets: http://localhost:6027     # tickets-api  (future)
+  /auth: ${USERS_API_URL:-http://users-api:6024}
+  /users: ${USERS_API_URL:-http://users-api:6024}
+  /sessions: ${SESSIONS_API_URL:-http://sessions-api:6023}
+  /git: ${GIT_AGENT_URL:-http://git-agent:6025}
+  /repositories: ${GIT_AGENT_URL:-http://git-agent:6025}
+  /reviews: ${REVIEWS_API_URL:-http://reviews-api:6026}
+  /tickets: ${TICKETS_API_URL:-http://tickets-api:6027}

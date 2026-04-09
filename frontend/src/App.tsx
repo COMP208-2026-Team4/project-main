@@ -8,6 +8,9 @@ import DashboardPage from "./pages/DashboardPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import KanbanPage from "./pages/KanbanPage";
 import RepoPage from "./pages/RepoPage";
+import CommitsPage from "./pages/CommitsPage";
+import BlobPage from "./pages/BlobPage";
+import DiffPage from "./pages/DiffPage";
 import TicketsPage from "./pages/TicketsPage";
 import TimerPage from "./pages/TimerPage";
 import UserPage from "./pages/UserPage";
@@ -38,6 +41,9 @@ const App: React.FC = () => {
           <Route path="/:userId" element={<UserPage />} />
           <Route path="/:userId/:repoId/kanban" element={<KanbanPage />} />
           <Route path="/:userId/:repoId/repo" element={<RepoPage />} />
+          <Route path="/:userId/:repoId/repo/commits" element={<CommitsPage />} />
+          <Route path="/:userId/:repoId/repo/blob" element={<BlobPage />} />
+          <Route path="/:userId/:repoId/repo/commit/:sha" element={<DiffPage />} />
           <Route path="/:userId/:repoId/tickets" element={<TicketsPage />} />
           <Route path="/:userId/:repoId/timer" element={<TimerPage />} />
         </Route>

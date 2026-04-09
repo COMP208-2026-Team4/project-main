@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import CreateRepoModal from "../components/CreateRepoModal";
 import { selectUser } from "../store/auth";
@@ -16,7 +17,7 @@ interface Repository {
 }
 
 /**
- * Dashboard — the main protected page shown after login.
+ * Dashboard - the main protected page shown after login.
  * Previously named HomePage; now a proper authenticated view.
  */
 const DashboardPage: React.FC = () => {
@@ -73,16 +74,22 @@ const DashboardPage: React.FC = () => {
             </div>
           ) : (
             repos.map((repo) => (
-              <div
+              <Link
                 key={repo.id}
-                className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm flex items-center justify-between">
-                <span className="font-medium dark:text-white">{repo.name}</span>
-                {repo.created_at && (
-                  <span className="text-black/40 dark:text-white/40 text-xs">
-                    {new Date(repo.created_at).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
+                to={`/${repo.owner}/${repo.name}/repo`}
+                className="rounded-lg border border-black/10 dark:border-white/10 p-4 text-sm grid gap-1 transition-colors hover:bg-black/4 dark:hover:bg-white/6 hover:border-black/20 dark:hover:border-white/20">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium dark:text-white">{repo.name}</span>
+                  {repo.created_at && (
+                    <span className="text-black/40 dark:text-white/40 text-xs">
+                      {new Date(repo.created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <span className="text-black/45 dark:text-white/45 text-xs font-mono">
+                  {repo.owner}/{repo.name}
+                </span>
+              </Link>
             ))
           )}
         </div>

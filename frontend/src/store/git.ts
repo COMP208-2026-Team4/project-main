@@ -4,7 +4,6 @@ import { getHeaders } from './utils/rest-headers';
 
 const initialState: Store.GitState = {
   branches: [],
-  head: null,
   commits: [],
   tree: [],
   treeRef: '',
@@ -19,26 +18,8 @@ const slice = createSlice({
   name: 'git',
   initialState,
   reducers: {
-    branchesFetched: (
-      state,
-      { payload }: PayloadAction<{ branches: Entity.Branch[]; head: string | null }>,
-    ) => {
-      state.branches = payload.branches;
-      state.head = payload.head;
-    },
-    /** Reset cached repo data when navigating to a different repo so a stale
-     *  branch list / commit cache from a previous repo doesn't leak into the
-     *  next page's first render. */
-    repoReset: (state) => {
-      state.branches = [];
-      state.head = null;
-      state.commits = [];
-      state.tree = [];
-      state.treeRef = '';
-      state.treePath = '';
-      state.blob = null;
-      state.diff = null;
-      state.error = null;
+    branchesFetched: (state, { payload }: PayloadAction<Entity.Branch[]>) => {
+      state.branches = payload;
     },
     commitsFetched: (state, { payload }: PayloadAction<{ commits: Entity.Commit[]; append: boolean }>) => {
       state.commits = payload.append ? [...state.commits, ...payload.commits] : payload.commits;
@@ -105,10 +86,7 @@ export const fetchBranches = (owner: string, repo: string) => (dispatch: any) =>
     method: 'get',
     headers: getHeaders(),
     callback: (data: any) =>
-      dispatch(actions.branchesFetched({
-        branches: (data?.branches ?? []).map((name: string) => ({ name })),
-        head: data?.head ?? null,
-      })),
+      dispatch(actions.branchesFetched((data?.branches ?? []).map((name: string) => ({ name })))),
     errorCallback: (resp: any) =>
       dispatch(actions.setError(resp?.data?.error ?? 'Failed to fetch branches')),
   }));

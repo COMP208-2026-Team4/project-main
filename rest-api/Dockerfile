@@ -1,12 +1,9 @@
-FROM node:22-alpine
+FROM caddy:2-alpine
 
-WORKDIR /app
+WORKDIR /etc/caddy
 
-COPY package*.json ./
-RUN npm install
+COPY Caddyfile /etc/caddy/Caddyfile
 
-COPY . .
+EXPOSE 3001
 
-EXPOSE 3000
-
-CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/index.ts"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

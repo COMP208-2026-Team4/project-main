@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import api from './middleware/rest';
 import users from './users';
 import sessions from './sessions';
+import git from './git';
 import auth from './auth';
 
 export default () => configureStore<Store.AppState>({
@@ -15,6 +16,7 @@ export default () => configureStore<Store.AppState>({
     entities: combineReducers({
       users,
       sessions,
+      git,
     })
   }),
 });

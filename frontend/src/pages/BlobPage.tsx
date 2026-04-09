@@ -20,11 +20,9 @@ const BlobPage: React.FC = () => {
   const [showEditor, setShowEditor] = useState(false);
 
   useEffect(() => {
-    // Gate on `user` so direct-loaded blob URLs don't fire before auth
-    // hydration completes (which would race the JWT resolution).
-    if (user && userId && repoId && path)
+    if (userId && repoId && path)
       dispatch(fetchBlob(userId, repoId, ref, path));
-  }, [user?.id, userId, repoId, ref, path]);
+  }, [userId, repoId, ref, path]);
 
   const decoded = useMemo(() => {
     if (!blob || blob.isBinary) return "";

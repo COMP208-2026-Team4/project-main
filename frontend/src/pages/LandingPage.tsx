@@ -62,7 +62,7 @@ const LandingPage: React.FC = () => {
         </a>
 
         <p className="text-sm text-black/40 dark:text-white/40">
-          No password required — we use Google for secure sign-in.
+          No password required - we use Google for secure sign-in.
         </p>
       </div>
     </div>

@@ -34,7 +34,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<LandingPage />} />
       <Route path="/auth/callback" element={<OAuthCallbackPage />} />
 
-      {/* Protected routes — share Layout (Navbar + Sidebar) */}
+      {/* Protected routes - share Layout (Navbar + Sidebar) */}
       <Route element={<Layout />}>
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />

@@ -17,7 +17,7 @@ interface Repository {
 }
 
 /**
- * Dashboard — the main protected page shown after login.
+ * Dashboard - the main protected page shown after login.
  * Previously named HomePage; now a proper authenticated view.
  */
 const DashboardPage: React.FC = () => {

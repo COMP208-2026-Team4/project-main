@@ -6,7 +6,7 @@ sidebar_position: 3
 
 ## Overview
 
-The frontend handles authentication using Redux for state management and React Router for protected routing. There are no passwords — sign-in is entirely via Google OAuth2.
+The frontend handles authentication using Redux for state management and React Router for protected routing. There are no passwords - sign-in is entirely via Google OAuth2.
 
 ---
 
@@ -27,12 +27,12 @@ interface AuthState {
 ```
 
 **Actions:**
-- `loginSuccess(user)` — populated after successful `/users/me` fetch
-- `logout()` — clears user and removes token from localStorage
-- `setLoading(bool)` — controls the boot loading state
+- `loginSuccess(user)` - populated after successful `/users/me` fetch
+- `logout()` - clears user and removes token from localStorage
+- `setLoading(bool)` - controls the boot loading state
 
 **Thunks:**
-- `fetchMe()` — dispatches a `GET /users/me` request; used both after OAuth callback and on app boot to restore session
+- `fetchMe()` - dispatches a `GET /users/me` request; used both after OAuth callback and on app boot to restore session
 
 ---
 
@@ -87,7 +87,7 @@ const ProtectedRoute: React.FC = () => {
 
 1. User clicks **Sign in with Google** on `LandingPage`.
 2. Browser navigates to `GET /auth/google` on the API gateway.
-3. Gateway proxies to `users-api` (public route — no JWT required).
+3. Gateway proxies to `users-api` (public route - no JWT required).
 4. `users-api` redirects to Google's consent screen.
 5. After approval, Google calls `users-api`'s callback.
 6. `users-api` issues a JWT and redirects to `/auth/callback?token=<jwt>`.

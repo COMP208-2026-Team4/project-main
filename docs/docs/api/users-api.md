@@ -1,6 +1,6 @@
 # Users API
 
-The `users-api` microservice handles user identity — registration, profile management, and Google OAuth2 sign-in. It runs on port **6024**.
+The `users-api` microservice handles user identity - registration, profile management, and Google OAuth2 sign-in. It runs on port **6024**.
 
 All protected routes require a valid JWT in the `Authorization: Bearer <token>` header.
 
@@ -12,7 +12,7 @@ All protected routes require a valid JWT in the `Authorization: Bearer <token>` 
 
 Create a new user account with email/password credentials.
 
-**Public** — no JWT required.
+**Public** - no JWT required.
 
 **Request body:**
 ```json
@@ -43,7 +43,7 @@ Create a new user account with email/password credentials.
 
 Returns the profile of the authenticated user.
 
-**Protected** — requires JWT.
+**Protected** - requires JWT.
 
 **Response `200`:**
 ```json
@@ -65,7 +65,7 @@ The `password` field is **never** included in any response.
 
 Update the authenticated user's own profile.
 
-**Protected** — requires JWT. The `:id` in the URL must match the `sub` claim of the JWT.
+**Protected** - requires JWT. The `:id` in the URL must match the `sub` claim of the JWT.
 
 **Request body (all fields optional, at least one required):**
 ```json
@@ -91,7 +91,7 @@ Update the authenticated user's own profile.
 
 Redirects to Google's OAuth2 consent screen. See [Auth Flow](./auth-flow.md) for the full sequence.
 
-**Public** — no JWT required.
+**Public** - no JWT required.
 
 ---
 
@@ -99,7 +99,7 @@ Redirects to Google's OAuth2 consent screen. See [Auth Flow](./auth-flow.md) for
 
 OAuth2 callback endpoint called by Google. Issues a JWT and redirects to the frontend.
 
-**Public** — no JWT required.
+**Public** - no JWT required.
 
 ---
 
@@ -151,4 +151,4 @@ npm run dev
 npm test
 ```
 
-Tests use Node's built-in test runner and mock Prisma — no database required.
+Tests use Node's built-in test runner and mock Prisma - no database required.

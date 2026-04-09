@@ -6,7 +6,7 @@ sidebar_position: 1
 
 ## Overview
 
-Cone uses **Google OAuth2** for sign-in and **JWT (HS256)** for session management. There are no passwords to remember — Google handles identity verification.
+Cone uses **Google OAuth2** for sign-in and **JWT (HS256)** for session management. There are no passwords to remember - Google handles identity verification.
 
 ---
 
@@ -102,10 +102,10 @@ Authorization: Bearer <token>
 
 1. Extract the token from the `Authorization` header.
 2. Verify the HS256 signature with `JWT_SECRET`.
-3. Check `exp` — reject if expired.
+3. Check `exp` - reject if expired.
 4. Use `sub` as the authoritative user identity.
 
-**Never** trust the `x-user-id` / `x-user-email` forwarded headers as the sole source of identity. These are forwarded by the gateway as a convenience after it has already validated the token — downstream services must still re-verify the original `Authorization` header.
+**Never** trust the `x-user-id` / `x-user-email` forwarded headers as the sole source of identity. These are forwarded by the gateway as a convenience after it has already validated the token - downstream services must still re-verify the original `Authorization` header.
 
 ---
 
@@ -114,14 +114,14 @@ Authorization: Bearer <token>
 ### `GET /auth/google`
 Redirects the browser to Google's OAuth2 consent screen.
 
-**Public** — no JWT required.
+**Public** - no JWT required.
 
 ---
 
 ### `GET /auth/google/callback`
 Called by Google after the user approves access.
 
-**Public** — no JWT required.
+**Public** - no JWT required.
 
 **Query params:** `code` (authorization code from Google), `error` (present on denial).
 

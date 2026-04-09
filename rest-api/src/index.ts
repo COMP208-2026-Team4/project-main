@@ -67,7 +67,7 @@ try {
 }
 
 // Fail-fast sanity check: no internal route may resolve to localhost when
-// running inside a container — that would call the rest-api itself, not the
+// running inside a container - that would call the rest-api itself, not the
 // upstream service, and produce confusing 502s / fake CORS errors.
 const insideContainer = fs.existsSync('/.dockerenv');
 if (insideContainer) {
@@ -92,7 +92,7 @@ Object.entries(config.routes).forEach(([routePath, target]) => {
     changeOrigin: true,
     logLevel: 'debug',
     onProxyRes: (proxyRes) => {
-      // Strip all upstream CORS headers — the cors() middleware on this proxy
+      // Strip all upstream CORS headers - the cors() middleware on this proxy
       // is the single source of truth for Access-Control-* headers.
       delete proxyRes.headers['access-control-allow-origin'];
       delete proxyRes.headers['access-control-allow-credentials'];
@@ -110,7 +110,7 @@ Object.entries(config.routes).forEach(([routePath, target]) => {
       if (auth) proxyReq.setHeader('Authorization', auth);
 
       // Forward verified user context headers set by requireAuth.
-      // Downstream services must NOT trust these alone — they must re-verify
+      // Downstream services must NOT trust these alone - they must re-verify
       // the Authorization header themselves.
       const userId = req.headers['x-user-id'];
       const userEmail = req.headers['x-user-email'];

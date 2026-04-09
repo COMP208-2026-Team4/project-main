@@ -13,9 +13,9 @@ architecture-beta
     group backend(cloud)[Backend]
     group microservices(server)[Microservices] in backend
 
-    service rest_api(server)[Rest API — Gateway] in backend
+    service rest_api(server)[Rest API - Gateway] in backend
     service users(server)[Users API :6024] in microservices
-    service git(server)[Git Agent :6025 — Rust] in microservices
+    service git(server)[Git Agent :6025 - Rust] in microservices
     service sessions(server)[Sessions API :6023] in microservices
     service reviews(server)[Review API] in microservices
     service tickets(server)[Tickets API] in microservices
@@ -50,7 +50,7 @@ Cone uses a **zero-trust** approach to service-to-service communication. No serv
    - If valid, it adds `x-user-id`, `x-user-email`, `x-user-username` headers and forwards the original `Authorization` header to the upstream microservice.
    - If invalid, it returns `401 Unauthorized` immediately.
 3. **Microservices** (`users-api`, `sessions-api`, `git-agent`, …) each independently re-verify the `Authorization: Bearer` header.
-   - They do **not** trust the `x-user-*` headers alone — these are informational only.
+   - They do **not** trust the `x-user-*` headers alone - these are informational only.
    - If the JWT is missing or invalid, the microservice returns `401`.
 
 ```
@@ -61,7 +61,7 @@ Client → [JWT] → rest-api (validates) → [JWT + x-user-*] → microservice 
 
 - A compromised internal service cannot forge requests on behalf of another user.
 - All services share a single `JWT_SECRET` environment variable but perform independent checks.
-- The forwarded `x-user-*` headers are a convenience for logging and filtering — **never** the sole source of truth.
+- The forwarded `x-user-*` headers are a convenience for logging and filtering - **never** the sole source of truth.
 
 ---
 
@@ -112,7 +112,7 @@ Client → [JWT] → rest-api (validates) → [JWT + x-user-*] → microservice 
 
 ## Database
 
-All services using MariaDB connect via Prisma ORM. Each service has its own schema and migration history — there is no shared schema.
+All services using MariaDB connect via Prisma ORM. Each service has its own schema and migration history - there is no shared schema.
 
 | Service | Database name |
 |---------|--------------|
@@ -127,6 +127,6 @@ MariaDB runs on port `3307` (non-standard to avoid conflicts with any local MySQ
 
 Every service reads its configuration from a `.env` file. Copy `.env.example` and fill in the values before starting.
 
-The **one shared secret** is `JWT_SECRET` — it must be identical across all services.
+The **one shared secret** is `JWT_SECRET` - it must be identical across all services.
 
 See individual service docs for their full variable lists.

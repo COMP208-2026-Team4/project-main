@@ -52,8 +52,8 @@ Create a new session.
     "duration": 30
   }
   ```
-  - `quality` — required, integer.
-  - `duration` — required, integer.
+  - `quality` - required, integer.
+  - `duration` - required, integer.
 
 - **Response 201**
   - Body: Persisted `Session` object, including generated snowflake `id` and `createdAt` computed from that `id`.
@@ -72,7 +72,7 @@ Create a new session.
 Delete a session by its snowflake ID.
 
 - **Path parameters**
-  - `id` — required, string of digits representing a snowflake.
+  - `id` - required, string of digits representing a snowflake.
 
 - **Response 204**
   - Condition: Session existed and was deleted.

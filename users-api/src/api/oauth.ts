@@ -149,7 +149,7 @@ router.get("/google/callback", async (req: Request, res: Response) => {
           email: googleUser.email,
           username,
           avatarUrl: googleUser.picture ?? null,
-          // password stays null — OAuth-only account
+          // password stays null - OAuth-only account
         },
       });
     }

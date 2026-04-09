@@ -2,7 +2,7 @@
 
 The `git-agent` is a Rust microservice responsible for Git repository operations. It wraps the Git CLI and exposes a JSON HTTP API. It runs on port **6025**.
 
-All routes are protected — a valid JWT is required on every request (zero-trust).
+All routes are protected - a valid JWT is required on every request (zero-trust).
 
 ---
 
@@ -12,7 +12,7 @@ All routes are protected — a valid JWT is required on every request (zero-trus
 
 Create a new bare Git repository on the server.
 
-**Protected** — requires JWT. The `user_id` in the body must match the `sub` claim of the JWT.
+**Protected** - requires JWT. The `user_id` in the body must match the `sub` claim of the JWT.
 
 **Request body:**
 ```json
@@ -63,7 +63,7 @@ Returns the service status. Public.
 
 ## Security
 
-The git-agent validates the JWT independently on every request. It does **not** trust the `x-user-id` header forwarded by the gateway — only the verified `sub` claim from the JWT is used as the authoritative user identity.
+The git-agent validates the JWT independently on every request. It does **not** trust the `x-user-id` header forwarded by the gateway - only the verified `sub` claim from the JWT is used as the authoritative user identity.
 
 Additionally, `user_id` in the request body is cross-checked against `sub` to prevent one user from creating repositories under another's namespace.
 
@@ -88,7 +88,7 @@ The default `REPOS_DIR` is `./repos` (relative to the working directory).
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Port to listen on | `6025` |
-| `JWT_SECRET` | Shared HMAC secret | — |
+| `JWT_SECRET` | Shared HMAC secret | - |
 | `REPOS_DIR` | Directory for storing bare repositories | `./repos` |
 
 ---
@@ -108,4 +108,4 @@ cargo run
 cargo test
 ```
 
-Tests are unit tests that use `actix-web`'s test utilities and mock the Git CLI — no actual Git operations are performed.
+Tests are unit tests that use `actix-web`'s test utilities and mock the Git CLI - no actual Git operations are performed.

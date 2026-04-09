@@ -39,7 +39,7 @@ pm2 stop ecosystem.config.js
 
 ---
 
-## Step 1 — Sign in with Google
+## Step 1 - Sign in with Google
 
 1. Open `http://localhost:5173` in your browser.
 2. You will see the Cone landing page.
@@ -49,7 +49,7 @@ pm2 stop ecosystem.config.js
 
 ---
 
-## Step 2 — Explore the Dashboard
+## Step 2 - Explore the Dashboard
 
 - Your username appears in the welcome heading.
 - The sidebar on the left lets you navigate to your repositories, tickets, and focus sessions.
@@ -57,7 +57,7 @@ pm2 stop ecosystem.config.js
 
 ---
 
-## Step 3 — Create a Repository
+## Step 3 - Create a Repository
 
 1. Click **+ New Repository** on the Dashboard.
 2. Enter a repository name (letters, numbers, dashes, dots, underscores only).
@@ -66,17 +66,17 @@ pm2 stop ecosystem.config.js
 
 ---
 
-## Step 4 — Navigate the Repository
+## Step 4 - Navigate the Repository
 
 1. Click the repository name to open it.
 2. From the sidebar you can switch between:
-   - **Code** — browse files and commits
-   - **Tickets** — manage issues and tasks (Kanban or table view)
-   - **Timer** — start a focus session tied to this repository
+   - **Code** - browse files and commits
+   - **Tickets** - manage issues and tasks (Kanban or table view)
+   - **Timer** - start a focus session tied to this repository
 
 ---
 
-## Step 5 — Start a Focus Session
+## Step 5 - Start a Focus Session
 
 1. Navigate to a repository's **Timer** tab.
 2. Set your session duration.

@@ -31,6 +31,9 @@ services:
       NODE_ENV: ${NODE_ENV}
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: ${FRONTEND_URL}
+      USERS_API_URL: http://users-api:${USERS_API_PORT}
+      SESSIONS_API_URL: http://sessions-api:${SESSIONS_API_PORT}
+      GIT_AGENT_URL: http://git-agent:${GIT_AGENT_PORT}
     volumes:
       - ./rest-api:/app
       - /app/node_modules

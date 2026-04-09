@@ -4,7 +4,6 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../resolvers";
 import { generateSnowflake } from "../snowflake";
 import { requireAuth, JwtPayload } from "../middleware/auth";
-import { findByUsernameInsensitive, suffixForId, USERNAME_TAKEN } from "./username";
 
 const router = express.Router();
 
@@ -20,35 +19,6 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
   }
 
   // Never expose the password hash
-  const { password: _pw, ...safe } = user;
-  res.status(200).json(safe);
-});
-
-// ── GET /users/lookup/:idOrUsername ──────────────────────────────────────────
-// Resolve a user by either snowflake id or canonical username (case-insensitive).
-// Returns the public profile so the frontend can canonicalise legacy URLs.
-router.get("/lookup/:idOrUsername", async (req: Request, res: Response) => {
-  const { idOrUsername } = req.params;
-  if (!idOrUsername) {
-    res.status(400).json({ error: "idOrUsername is required" });
-    return;
-  }
-
-  // Numeric → treat as id; otherwise treat as username (case-insensitive).
-  const looksNumeric = /^\d+$/.test(idOrUsername);
-  let user = looksNumeric
-    ? await prisma.user.findUnique({ where: { id: idOrUsername } })
-    : null;
-
-  if (!user) {
-    user = await findByUsernameInsensitive(idOrUsername);
-  }
-
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
-    return;
-  }
-
   const { password: _pw, ...safe } = user;
   res.status(200).json(safe);
 });
@@ -72,15 +42,6 @@ router.post("/", async (req: Request, res: Response) => {
     return;
   }
 
-  // Case-insensitive username uniqueness check (the DB unique index on
-  // `username` is case-sensitive on default MySQL collations, so we enforce
-  // CI uniqueness explicitly at the API layer too).
-  const existing = await findByUsernameInsensitive(username);
-  if (existing) {
-    res.status(409).json({ code: USERNAME_TAKEN, error: "username already taken" });
-    return;
-  }
-
   const hashed = await bcrypt.hash(password, 12);
   const id = generateSnowflake();
 
@@ -95,15 +56,7 @@ router.post("/", async (req: Request, res: Response) => {
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === "P2002"
     ) {
-      const target = (err.meta as any)?.target;
-      const isUsername = Array.isArray(target)
-        ? target.includes("username")
-        : typeof target === "string" && target.includes("username");
-      if (isUsername) {
-        res.status(409).json({ code: USERNAME_TAKEN, error: "username already taken" });
-        return;
-      }
-      res.status(409).json({ error: "email already taken" });
+      res.status(409).json({ error: "email or username already taken" });
       return;
     }
     throw err;
@@ -131,14 +84,6 @@ router.put("/:id", requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  if (username) {
-    const existing = await findByUsernameInsensitive(username);
-    if (existing && existing.id !== id) {
-      res.status(409).json({ code: USERNAME_TAKEN, error: "username already taken" });
-      return;
-    }
-  }
-
   try {
     const updated = await prisma.user.update({
       where: { id },
@@ -157,19 +102,8 @@ router.put("/:id", requireAuth, async (req: Request, res: Response) => {
       res.status(404).json({ error: `User ${id} not found` });
       return;
     }
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      res.status(409).json({ code: USERNAME_TAKEN, error: "username already taken" });
-      return;
-    }
     throw err;
   }
 });
-
-// Re-export the suffix helper so the OAuth callback can use the same
-// deterministic dedupe scheme when minting new usernames.
-export { suffixForId };
 
 export default router;

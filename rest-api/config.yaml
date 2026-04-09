@@ -1,4 +1,4 @@
-# Public routes - JWT validation is skipped for these paths.
+# Public routes — JWT validation is skipped for these paths.
 # The OAuth flow must be reachable before the user has a token.
 public_routes:
   - /auth

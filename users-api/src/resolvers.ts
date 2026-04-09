@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-// Lazy-initialised singleton - avoids opening DB connections at import time
+// Lazy-initialised singleton — avoids opening DB connections at import time
 // (useful for test environments that mock the DB).
 let _prisma: PrismaClient | undefined;
 

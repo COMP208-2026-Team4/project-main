@@ -8,7 +8,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - "3307:3306"
+      - "${MARIADB_HOST_PORT}:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -25,12 +25,12 @@ services:
   rest-api:
     build: ./rest-api
     ports:
-      - "3000:3000"
+      - "${REST_API_PORT}:${REST_API_PORT}"
     environment:
-      PORT: "3000"
-      NODE_ENV: "development"
+      PORT: ${REST_API_PORT}
+      NODE_ENV: ${NODE_ENV}
       JWT_SECRET: ${JWT_SECRET}
-      FRONTEND_URL: "http://localhost:5173"
+      FRONTEND_URL: ${FRONTEND_URL}
     volumes:
       - ./rest-api:/app
       - /app/node_modules
@@ -45,16 +45,16 @@ services:
   users-api:
     build: ./users-api
     ports:
-      - "6024:6024"
+      - "${USERS_API_PORT}:${USERS_API_PORT}"
     environment:
-      PORT: "6024"
-      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mariadb:3306/users"
+      PORT: ${USERS_API_PORT}
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOST}:${MYSQL_INTERNAL_PORT}/${USERS_DB}"
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRY: "7d"
+      JWT_EXPIRY: ${JWT_EXPIRY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_REDIRECT_URI: http://localhost:3000/auth/google/callback
-      FRONTEND_URL: "http://localhost:5173"
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      FRONTEND_URL: ${FRONTEND_URL}
     volumes:
       - ./users-api:/app
       - /app/node_modules
@@ -68,10 +68,10 @@ services:
   sessions-api:
     build: ./sessions-api
     ports:
-      - "6023:6023"
+      - "${SESSIONS_API_PORT}:${SESSIONS_API_PORT}"
     environment:
-      PORT: "6023"
-      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mariadb:3306/sessions"
+      PORT: ${SESSIONS_API_PORT}
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@${MYSQL_HOST}:${MYSQL_INTERNAL_PORT}/${SESSIONS_DB}"
     volumes:
       - ./sessions-api:/app
       - /app/node_modules
@@ -85,18 +85,13 @@ services:
   git-agent:
     build: ./git-agent
     ports:
-      - "6025:6025"
+      - "${GIT_AGENT_PORT}:${GIT_AGENT_PORT}"
     environment:
-      PORT: "6025"
+      PORT: ${GIT_AGENT_PORT}
       JWT_SECRET: ${JWT_SECRET}
-      REPOS_DIR: "/app/repos"
+      REPOS_DIR: ${GIT_AGENT_REPOS_DIR}
     volumes:
-      - ./git-agent/src:/app/src
-      - ./git-agent/Cargo.toml:/app/Cargo.toml:ro
-      - ./git-agent/Cargo.lock:/app/Cargo.lock:ro
-      - git_agent_target:/app/target
-      - cargo_registry:/usr/local/cargo/registry
-      - git_repos:/app/repos
+      - ./git-agent:/app
 
   # ──────────────────────────────────────────────
   # Frontend (Vite + React)  →  localhost:5173
@@ -104,11 +99,11 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     environment:
       # Vite inlines VITE_* vars at dev-server startup.
       # Browsers connect to localhost:3000, so this stays as-is.
-      VITE_API_URL: "http://localhost:3000"
+      VITE_API_URL: ${REST_API_URL}
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -121,7 +116,7 @@ services:
   docs:
     build: ./docs
     ports:
-      - "6054:6054"
+      - "${DOCS_PORT}:${DOCS_PORT}"
     volumes:
       - ./docs:/app
       - /app/node_modules

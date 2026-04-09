@@ -6,7 +6,7 @@ services:
   mariadb:
     image: mariadb:11
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -29,7 +29,8 @@ services:
     environment:
       PORT: "3000"
       NODE_ENV: "development"
-      JWT_SECRET: "change-me-to-a-long-random-secret"
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: "http://localhost:5173"
     volumes:
       - ./rest-api:/app
       - /app/node_modules
@@ -49,11 +50,11 @@ services:
       - "6024:6024"
     environment:
       PORT: "6024"
-      DATABASE_URL: "mysql://root:password@mariadb:3306/users"
-      JWT_SECRET: "change-me-to-a-long-random-secret"
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mariadb:3306/users"
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRY: "7d"
-      GOOGLE_CLIENT_ID: 1090591837059-4l0im1al8q4u5is8npefus9of2pnbqnp.apps.googleusercontent.com
-      GOOGLE_CLIENT_SECRET: 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
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: http://localhost:3000/auth/google/callback
       FRONTEND_URL: "http://localhost:5173"
     volumes:
@@ -72,7 +73,7 @@ services:
       - "6023:6023"
     environment:
       PORT: "6023"
-      DATABASE_URL: "mysql://root:password@mariadb:3306/sessions"
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mariadb:3306/sessions"
     volumes:
       - ./sessions-api:/app
       - /app/node_modules
@@ -89,7 +90,7 @@ services:
       - "6025:6025"
     environment:
       PORT: "6025"
-      JWT_SECRET: "change-me-to-a-long-random-secret"
+      JWT_SECRET: ${JWT_SECRET}
       REPOS_DIR: "/app/repos"
     volumes:
       - ./git-agent/src:/app/src

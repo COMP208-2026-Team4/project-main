@@ -33,8 +33,6 @@ services:
     volumes:
       - ./rest-api:/app
       - /app/node_modules
-      # Override config.yaml with Docker-aware service URLs
-      - ./rest-api/config.docker.yaml:/app/config.yaml:ro
     depends_on:
       - users-api
       - sessions-api

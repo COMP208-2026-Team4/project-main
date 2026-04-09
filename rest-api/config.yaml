@@ -5,13 +5,13 @@ public_routes:
 
 # Proxied microservice routes.
 # Values support ${VAR} / ${VAR:-default} env-var expansion so the same
-# config works for local dev (set USERS_API_URL=http://localhost:6024 …) and
-# inside Docker Compose (defaults below resolve to the service hostnames).
+# config works for local dev / process managers out of the box.
+# Docker Compose should set *_URL env vars to service DNS names.
 routes:
-  /auth: ${USERS_API_URL:-http://users-api:6024}
-  /users: ${USERS_API_URL:-http://users-api:6024}
-  /sessions: ${SESSIONS_API_URL:-http://sessions-api:6023}
-  /git: ${GIT_AGENT_URL:-http://git-agent:6025}
-  /repositories: ${GIT_AGENT_URL:-http://git-agent:6025}
-  /reviews: ${REVIEWS_API_URL:-http://reviews-api:6026}
-  /tickets: ${TICKETS_API_URL:-http://tickets-api:6027}
+  /auth: ${USERS_API_URL:-http://localhost:6024}
+  /users: ${USERS_API_URL:-http://localhost:6024}
+  /sessions: ${SESSIONS_API_URL:-http://localhost:6023}
+  /git: ${GIT_AGENT_URL:-http://localhost:6025}
+  /repositories: ${GIT_AGENT_URL:-http://localhost:6025}
+  /reviews: ${REVIEWS_API_URL:-http://localhost:6026}
+  /tickets: ${TICKETS_API_URL:-http://localhost:6027}

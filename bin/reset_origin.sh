@@ -1,17 +1,17 @@
-#!/bin/bash
+#!/bin/sh
 set -u
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)"
 HAS_ERRORS=0
 
 echo "Resetting repositories under \"$ROOT\""
 echo
 
 reset_repo() {
-    local repo_path="$1"
+    repo_path="$1"
     echo "===== $repo_path ====="
 
-    if [[ ! -d "$repo_path" ]]; then
+    if [ ! -d "$repo_path" ]; then
         echo "Failed to open repository."
         HAS_ERRORS=1
         echo
@@ -37,14 +37,13 @@ reset_repo() {
 }
 
 scan_repos() {
-    local scan_path="$1"
-    local dir
+    scan_path="$1"
 
     for dir in "$scan_path"/*; do
-        [[ -d "$dir" ]] || continue
-        [[ "$(basename "$dir")" == ".git" ]] && continue
+        [ -d "$dir" ] || continue
+        [ "$(basename "$dir")" = ".git" ] && continue
 
-        if [[ -e "$dir/.git" ]]; then
+        if [ -e "$dir/.git" ]; then
             reset_repo "$dir"
         fi
 
@@ -56,7 +55,7 @@ reset_repo "$ROOT"
 scan_repos "$ROOT"
 
 echo
-if [[ "$HAS_ERRORS" -eq 1 ]]; then
+if [ "$HAS_ERRORS" -eq 1 ]; then
     echo "Completed with one or more errors."
 else
     echo "Done."

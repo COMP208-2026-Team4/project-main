@@ -23,5 +23,8 @@
     "build:git-agent": "cd git-agent && cargo build --release",
     "test:git-agent": "cd git-agent && cargo test",
     "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "effect": "^3.20.0"
   }
 }

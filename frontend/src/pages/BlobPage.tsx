@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar";
 import FileEditorModal from "../components/FileEditorModal";
 import { fetchBlob, deleteBlob } from "../store/git";
 import { selectUser } from "../store/auth";
+import { detectLanguage, highlightCode, renderMarkdown } from "../lib/markdown";
 
 const BlobPage: React.FC = () => {
   const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
@@ -35,6 +36,15 @@ const BlobPage: React.FC = () => {
 
   const filename = path.split("/").pop() ?? "";
   const isMarkdown = /\.(md|markdown)$/i.test(filename);
+  const language = useMemo(() => detectLanguage(filename), [filename]);
+  const highlightedHtml = useMemo(
+    () => (decoded ? highlightCode(decoded, language) : ""),
+    [decoded, language],
+  );
+  const renderedMarkdownHtml = useMemo(
+    () => (isMarkdown && decoded ? renderMarkdown(decoded) : ""),
+    [isMarkdown, decoded],
+  );
 
   const segments = path.split("/").filter(Boolean);
 
@@ -100,13 +110,22 @@ const BlobPage: React.FC = () => {
             <div className="text-black/60 dark:text-white/60">Binary file not shown.</div>
           )}
           {blob && !blob.isBinary && isMarkdown && (
-            <pre className="p-4 rounded-lg bg-black/4 dark:bg-white/4 overflow-x-auto whitespace-pre-wrap break-words">
-              <code className="font-mono text-sm whitespace-pre-wrap">{decoded}</code>
-            </pre>
+            <div
+              data-testid="blob-markdown"
+              className="markdown-body"
+              dangerouslySetInnerHTML={{ __html: renderedMarkdownHtml }}
+            />
           )}
           {blob && !blob.isBinary && !isMarkdown && (
-            <pre className="p-4 rounded-lg bg-black/4 dark:bg-white/4 overflow-x-auto">
-              <code className="font-mono text-sm whitespace-pre">{decoded}</code>
+            <pre
+              data-testid="blob-code"
+              data-lang={language}
+              className="p-4 rounded-lg bg-black/4 dark:bg-white/4 overflow-x-auto"
+            >
+              <code
+                className="font-mono text-sm whitespace-pre"
+                dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+              />
             </pre>
           )}
         </div>

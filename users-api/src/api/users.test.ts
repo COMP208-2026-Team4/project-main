@@ -13,10 +13,28 @@ import assert from "node:assert/strict";
 // ── Stub Prisma before any route imports ────────────────────────────────────
 const fakeUsers: Record<string, any> = {};
 
+const allUsers = () => Object.values(fakeUsers) as any[];
+
 const prismaStub = {
   user: {
-    findUnique: async ({ where }: any) =>
-      fakeUsers[where.id ?? where.email] ?? null,
+    findUnique: async ({ where }: any) => {
+      if (where.id) return fakeUsers[where.id] ?? null;
+      if (where.email) return allUsers().find((u) => u.email === where.email) ?? null;
+      if (where.username) return allUsers().find((u) => u.username === where.username) ?? null;
+      return null;
+    },
+    findMany: async ({ where }: any) => {
+      const orClauses = where?.OR;
+      if (!Array.isArray(orClauses)) return [];
+
+      const allowedUsernames = new Set<string>();
+      for (const clause of orClauses) {
+        const username = clause?.username;
+        if (typeof username === "string") allowedUsernames.add(username);
+      }
+
+      return allUsers().filter((u) => allowedUsernames.has(u.username));
+    },
     create: async ({ data }: any) => {
       if (Object.values(fakeUsers).some((u) => u.email === data.email))
         throw Object.assign(new Error("Unique constraint"), { code: "P2002" });
@@ -171,6 +189,28 @@ describe("GET /users/me", () => {
     assert.equal(res.status, 200);
     assert.equal(res.body.email, "alice@example.com");
     assert.ok(!res.body.password);
+  });
+});
+
+// ── GET /users/:username ─────────────────────────────────────────────────────
+describe("GET /users/:username", () => {
+  it("returns a public profile by username", async () => {
+    const res = await request("GET", "/users/alice");
+    assert.equal(res.status, 200);
+    assert.equal(res.body.username, "alice");
+    assert.ok(!res.body.password);
+    assert.ok(!res.body.email);
+  });
+
+  it("matches usernames case-insensitively", async () => {
+    const res = await request("GET", "/users/ALICE");
+    assert.equal(res.status, 200);
+    assert.equal(res.body.username, "alice");
+  });
+
+  it("returns 404 when user does not exist", async () => {
+    const res = await request("GET", "/users/does-not-exist");
+    assert.equal(res.status, 404);
   });
 });
 

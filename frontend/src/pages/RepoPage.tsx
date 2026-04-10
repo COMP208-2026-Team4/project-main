@@ -4,10 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Star,
   GitBranch,
-  ChevronDown,
   Copy,
   Folder,
   FileText,
+  FileQuestion,
   GitCommitHorizontal,
   Tag,
   Rocket,
@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import FileEditorModal from "../components/FileEditorModal";
+import BranchDropdown from "../components/BranchDropdown";
 import { fetchBranches, fetchCommits, fetchTree, fetchBlob, actions as gitActions } from "../store/git";
+import { renderMarkdown, findReadme, findLicense } from "../lib/markdown";
 
 const SkeletonFileRow: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
   <tr className="bg-black/2 dark:bg-white/2 bg-clip-padding border-t border-white dark:border-black">
@@ -65,8 +67,17 @@ const RepoPage: React.FC = () => {
 
   const lastCommit = git.commits[0];
 
-  const readmeEntry = useMemo(
-    () => git.tree.find((e) => /^readme\.(md|markdown)$/i.test(e.name)),
+  const readmeEntry = useMemo(() => findReadme(git.tree), [git.tree]);
+  const licenseEntry = useMemo(() => findLicense(git.tree), [git.tree]);
+  const sortedTree = useMemo(
+    () => [...git.tree].sort((a, b) => {
+      const aIsFolder = a.type === "tree";
+      const bIsFolder = b.type === "tree";
+
+      if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    }),
     [git.tree],
   );
 
@@ -87,6 +98,11 @@ const RepoPage: React.FC = () => {
       return "";
     }
   }, [git.blob]);
+
+  const renderedReadme = useMemo(
+    () => (decodedReadme ? renderMarkdown(decodedReadme) : ""),
+    [decodedReadme],
+  );
 
   const goUp = () => {
     const parts = currentPath.split("/").filter(Boolean);
@@ -122,20 +138,11 @@ const RepoPage: React.FC = () => {
         <div className="h-full grid grid-rows-[auto_auto_auto_1fr] overflow-auto">
           {/* Branch bar */}
           <div className="h-12 grid grid-cols-[auto_auto_1fr_auto] place-items-center px-2 gap-2 bg-clip-padding border-b border-black/20 dark:border-white/20">
-            <div className="relative grid place-items-center">
-              <select
-                value={selectedBranch}
-                onChange={(e) => { setSelectedBranch(e.target.value); setCurrentPath(""); }}
-                className="appearance-none py-1 pl-8 pr-8 rounded-lg bg-black/10 hover:bg-black/20 dark:bg-white/10 hover:dark:bg-white/20 cursor-pointer font-mono"
-              >
-                {git.branches.map((b) => <option key={b.name} value={b.name}>{b.name}</option>)}
-                {!git.branches.find((b) => b.name === selectedBranch) && (
-                  <option value={selectedBranch}>{selectedBranch}</option>
-                )}
-              </select>
-              <GitBranch className="size-4 absolute left-2 pointer-events-none" />
-              <ChevronDown className="size-4 absolute right-2 pointer-events-none" />
-            </div>
+            <BranchDropdown
+              branches={git.branches.map((b) => b.name)}
+              selected={selectedBranch}
+              onChange={(b) => { setSelectedBranch(b); setCurrentPath(""); }}
+            />
             {currentPath && (
               <button
                 onClick={goUp}
@@ -148,7 +155,7 @@ const RepoPage: React.FC = () => {
             <span />
             <button
               onClick={() => setShowEditor(true)}
-              className="py-1 px-3 rounded-lg bg-green-400/70 hover:bg-green-400/90 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/80 my-auto font-bold"
+              className="col-start-4 py-1 px-3 rounded-lg bg-green-400/70 hover:bg-green-400/90 cursor-pointer grid grid-flow-col place-items-center gap-2 text-black/80 my-auto font-bold"
             >
               <Plus className="size-4" />
               Add file
@@ -204,7 +211,23 @@ const RepoPage: React.FC = () => {
                   <SkeletonFileRow icon={<FileText className="size-4" />} />
                 </>
               )}
-              {git.tree.map((entry) => {
+              {!git.loading && git.tree.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="h-32">
+                    <div
+                      data-testid="empty-repo-message"
+                      className="grid place-items-center text-black/50 dark:text-white/50 gap-2 py-6"
+                    >
+                      <FileQuestion className="size-8" />
+                      <div className="font-semibold">No files yet</div>
+                      <div className="text-sm">
+                        This repository is empty. Use <span className="font-mono">Add file</span> to create the first file.
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+              {sortedTree.map((entry) => {
                 const fullPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
                 const isFolder = entry.type === "tree";
                 return (
@@ -238,15 +261,17 @@ const RepoPage: React.FC = () => {
           </table>
 
           {/* README */}
-          {readmeEntry && decodedReadme && (
+          {readmeEntry && renderedReadme && (
             <div>
               <div className="h-12 bg-black/8 dark:bg-white/8 font-[500] grid grid-cols-[auto_auto_1fr] place-items-center bg-clip-padding border-b border-black/20 dark:border-white/20">
                 <FileText className="size-5 inline mx-4" />
                 {readmeEntry.name}
               </div>
-              <div className="p-8">
-                <pre className="whitespace-pre-wrap break-words text-sm leading-6">{decodedReadme}</pre>
-              </div>
+              <div
+                data-testid="readme-rendered"
+                className="markdown-body p-8"
+                dangerouslySetInnerHTML={{ __html: renderedReadme }}
+              />
             </div>
           )}
         </div>
@@ -255,7 +280,7 @@ const RepoPage: React.FC = () => {
         <div className="border-l border-black/20 dark:border-white/20 h-full w-80 p-4 flex flex-col gap-2">
           <div>
             <h4 className="font-bold">Project information</h4>
-            A modern, open-source git productivity suite.
+            A Cone project.
           </div>
           <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
           <Link
@@ -288,10 +313,16 @@ const RepoPage: React.FC = () => {
               {readmeEntry.name}
             </Link>
           )}
-          <a className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center">
-            <Scale className="size-5 inline" />
-            License
-          </a>
+          {licenseEntry && (
+            <Link
+              data-testid="pinned-license"
+              to={`/${userId}/${repoId}/repo/blob?ref=${selectedBranch}&path=${encodeURIComponent(licenseEntry.name)}`}
+              className="hover:underline grid grid-cols-[auto_auto_auto_1fr] gap-2 place-items-center"
+            >
+              <Scale className="size-5 inline" />
+              {licenseEntry.name}
+            </Link>
+          )}
         </div>
       </div>
 

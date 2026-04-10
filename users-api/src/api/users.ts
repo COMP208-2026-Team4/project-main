@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../resolvers";
 import { generateSnowflake } from "../snowflake";
 import { requireAuth, JwtPayload } from "../middleware/auth";
+import { findByUsernameInsensitive } from "./username";
 
 const router = express.Router();
 
@@ -21,6 +22,22 @@ router.get("/me", requireAuth, async (req: Request, res: Response) => {
   // Never expose the password hash
   const { password: _pw, ...safe } = user;
   res.status(200).json(safe);
+});
+
+// ── GET /users/:username ───────────────────────────────────────────────────────
+// Public profile lookup by username (case-insensitive).
+router.get("/:username", async (req: Request, res: Response) => {
+  const { username } = req.params;
+
+  const user = await findByUsernameInsensitive(username);
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  // Public profile: never expose password hash or email address.
+  const { password: _pw, email: _email, ...publicProfile } = user;
+  res.status(200).json(publicProfile);
 });
 
 // ── POST /users ───────────────────────────────────────────────────────────────

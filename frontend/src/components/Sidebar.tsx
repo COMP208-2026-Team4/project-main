@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import React from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useSidebar } from "../context/SidebarContext";
 import {
   Tickets,
@@ -21,7 +22,7 @@ interface SidebarProps { variant?: "home" | "kanban" | "repo" | "tickets" | "tim
 interface CollapsibleProps { collapsed: boolean; }
 
 const navClasses = (collapsed: boolean, extra = "") =>
-  `rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full flex items-center ${
+  `gap-2 rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full flex items-center ${
     (collapsed) ? "" : ""
   } ${extra}`.trim();
 
@@ -33,13 +34,10 @@ const labelClasses = (collapsed: boolean) =>
 // added unicode thin spaces for spacing
 const HomeSidebar: React.FC<CollapsibleProps> = ({ collapsed }) => {
   const location = useLocation();
+  const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
+  const basePath = userId && repoId ? `/${userId}/${repoId}` : "#";
 
-  const links: SidebarLink[] = [
-    { to: "/jsmith/1234/tickets", icon: <Tickets className="size-5 text-black/60 dark:text-white/60" />, label: "  Ticket list view" },
-    { to: "/jsmith/1234/kanban", icon: <PanelsTopLeft className="size-5 text-black/60 dark:text-white/60" />, label: "  Kanban view" },
-    { to: "/jsmith/1234/repo", icon: <BookMarked className="size-5 text-black/60 dark:text-white/60" />, label: "  Repository view" },
-    { to: "/jsmith/1234/timer", icon: <Timer className="size-5 text-black/60 dark:text-white/60" />, label: "  Productivity view" },
-  ];
+  const links: SidebarLink[] = [];
 
   return (
     <div>
@@ -59,92 +57,30 @@ const HomeSidebar: React.FC<CollapsibleProps> = ({ collapsed }) => {
 };
 
 const ProjectSidebar: React.FC<{ activePage: string } & CollapsibleProps> = ({ activePage, collapsed }) => {
+  const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
+  const basePath = userId && repoId ? `/${userId}/${repoId}` : "#";
 
   return (
     <div>
-      <Link
-        to="/jsmith"
-        title={collapsed ? "ACME Corp." : undefined}
-        className={navClasses(collapsed, "mb-2")}>
-        <img className="size-5 min-w-5 rounded-sm shrink-0" src="/assets/acme.co.png" alt="ACME Corp." />
-        <span className={labelClasses(collapsed)}>  ACME Corp.</span>
-      </Link>
-      <Link
-        to="/jsmith/1234/tickets"
-        title={collapsed ? "Tickets" : undefined}
-        className={navClasses(collapsed, activePage === "tickets" ? "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6" : "")}>
-        <Tickets className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-        <span className={labelClasses(collapsed)}>  Tickets</span>
-      </Link>
-      <Link
-        to="/jsmith/1234/kanban"
-        title={collapsed ? "Projects" : undefined}
-        className={navClasses(collapsed)}>
-        <PanelsTopLeft className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-        <span className={labelClasses(collapsed)}>  Projects</span>
-      </Link>
-      <Link
-        to="/jsmith/1234/repo"
-        title={collapsed ? "Wiki" : undefined}
-        className={navClasses(collapsed)}>
-        <BookMarked className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-        <span className={labelClasses(collapsed)}>  Wiki</span>
-      </Link>
-      <hr className={`border-black/20 dark:border-white/20 rounded-full m-4 w-full transition-opacity duration-300 ${
-        collapsed ? "opacity-0" : "opacity-100"
-      }`} />
       {(activePage === "kanban" || activePage === "repo") && (
         <>
           <Link
-            to="/jsmith/1234/repo"
+            to={`${basePath}/repo`}
             title={collapsed ? "cone" : undefined}
-            className={navClasses(collapsed, "mb-2")}>
+            className={navClasses(collapsed, "mb-2")}
+          >
             <div className="block items-center rounded-sm overflow-clip bg-clip-padding border border-lime-600/30 dark:border-lime-800/30 bg-lime-600/20 dark:bg-lime-800/20 size-5 grid place-items-center shrink-0 mr-2">
-              <div className="text-xs text-lime-600 dark:text-lime-700 -translate-y-px">C</div>
+              <div className="text-xs text-lime-600 dark:text-lime-700 -translate-y-px">{userId?.charAt(0).toUpperCase()}</div>
             </div>
-            <span className={labelClasses(collapsed)}>cone</span>
+            <span className={labelClasses(collapsed)}>{userId}</span>
           </Link>
           <Link
-            to="/jsmith/1234/repo"
+            to={`${basePath}/repo`}
             title={collapsed ? "Code" : undefined}
-            className={navClasses(collapsed, activePage === "repo" ? "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6" : "")}>
+            className={navClasses(collapsed, activePage === "repo" ? "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6" : "")}
+          >
             <Code className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-            <span className={labelClasses(collapsed)}>  Code</span>
-          </Link>
-          <Link
-            to="/jsmith/1234/tickets"
-            title={collapsed ? "Issues" : undefined}
-            className={navClasses(collapsed)}>
-            <CircleDot className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-            <span className={labelClasses(collapsed)}>  Issues</span>
-          </Link>
-          <Link
-            to="/jsmith/1234/repo"
-            title={collapsed ? "Pull Requests" : undefined}
-            className={navClasses(collapsed)}>
-            <GitPullRequest className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-            <span className={labelClasses(collapsed)}>  Pull Requests</span>
-          </Link>
-          <h4 className={`m-2 place-self-start font-[600] overflow-hidden transition-[opacity,max-width] duration-300 ${
-            collapsed ? "opacity-0 max-w-0" : "opacity-100 max-w-xs"
-          }`}>Projects</h4>
-          <Link
-            to="/jsmith/1234/kanban"
-            title={collapsed ? "Frontend" : undefined}
-            className={navClasses(collapsed, activePage === "kanban" ? "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6" : "")}>
-            <div className="block items-center rounded-sm overflow-clip bg-clip-padding border border-cyan-600/30 dark:border-cyan-800/30 bg-cyan-600/20 dark:bg-cyan-800/20 size-5 grid place-items-center shrink-0">
-              <div className="text-xs text-cyan-600 dark:text-cyan-700 -translate-y-px">F</div>
-            </div>
-            <span className={labelClasses(collapsed)}>  Frontend</span>
-          </Link>
-          <Link
-            to="/jsmith/1234/kanban"
-            title={collapsed ? "Backend" : undefined}
-            className={navClasses(collapsed)}>
-            <div className="block items-center rounded-sm overflow-clip bg-clip-padding border border-amber-600/30 dark:border-amber-800/30 bg-amber-600/20 dark:bg-amber-800/20 size-5 grid place-items-center shrink-0">
-              <div className="text-xs text-amber-600 dark:text-amber-700 -translate-y-px">B</div>
-            </div>
-            <span className={labelClasses(collapsed)}>  Backend</span>
+            <span className={labelClasses(collapsed)}>Code</span>
           </Link>
         </>
       )}
@@ -153,31 +89,36 @@ const ProjectSidebar: React.FC<{ activePage: string } & CollapsibleProps> = ({ a
 };
 
 const TimerSidebar: React.FC<CollapsibleProps> = ({ collapsed }) => {
+  const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
+  const basePath = userId && repoId ? `/${userId}/${repoId}` : "#";
+
   return (
     <div>
       <Link
-        to="/jsmith"
-        title={collapsed ? "John Smith" : undefined}
-        className={navClasses(collapsed, "mb-2")}>
-        <img className="size-5 min-w-5 rounded-sm shrink-0" src="/assets/jsmith.png" alt="John Smith" />
-        <span className={labelClasses(collapsed)}>  John Smith</span>
+        to={userId ? `/${userId}` : "#"}
+        title={collapsed ? userId : undefined}
+        className={navClasses(collapsed, "mb-2")}
+      >
+        <img className="size-5 min-w-5 rounded-sm shrink-0" src={userId ? `/assets/${userId}.png` : "/assets/jsmith.png"} alt={userId ?? "user"} />
+        <span className={labelClasses(collapsed)}>		{userId ?? "User"}</span>
       </Link>
       <Link
-        to="/jsmith/1234/timer"
+        to={`${basePath}/timer`}
         title={collapsed ? "Productivity" : undefined}
-        className={navClasses(collapsed, "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6")}>
+        className={navClasses(collapsed, "bg-black/8 dark:bg-white/10 hover:bg-black/4 hover:dark:bg-white/6")}
+      >
         <Timer className="size-5 text-black/60 dark:text-white/60 shrink-0" />
-        <span className={labelClasses(collapsed)}>  Productivity</span>
+        <span className={labelClasses(collapsed)}>		Productivity</span>
       </Link>
       <Link
-        to="/jsmith/1234/repo"
+        to={`${basePath}/repo`}
         title={collapsed ? "Repositories" : undefined}
         className={navClasses(collapsed)}>
         <BookMarked className="size-5 text-black/60 dark:text-white/60 shrink-0" />
         <span className={labelClasses(collapsed)}>  Repositiories</span>
       </Link>
       <Link
-        to="/jsmith/1234/kanban"
+        to={`${basePath}/kanban`}
         title={collapsed ? "Projects" : undefined}
         className={navClasses(collapsed)}
       >
@@ -193,18 +134,12 @@ const Sidebar: React.FC<SidebarProps> = ({ variant = "home" }) => {
 
   const renderContent = () => {
     switch (variant) {
-      case "home":
-        return <HomeSidebar collapsed={collapsed} />;
-      case "kanban":
-        return <ProjectSidebar activePage="kanban" collapsed={collapsed} />;
-      case "repo":
-        return <ProjectSidebar activePage="repo" collapsed={collapsed} />;
-      case "tickets":
-        return <ProjectSidebar activePage="tickets" collapsed={collapsed} />;
-      case "timer":
-        return <TimerSidebar collapsed={collapsed} />;
-      default:
-        return <HomeSidebar collapsed={collapsed} />;
+      case "home": return <HomeSidebar collapsed={collapsed} />;
+      case "kanban": return <ProjectSidebar activePage="kanban" collapsed={collapsed} />;
+      case "repo": return <ProjectSidebar activePage="repo" collapsed={collapsed} />;
+      case "tickets": return <ProjectSidebar activePage="tickets" collapsed={collapsed} />;
+      case "timer": return <TimerSidebar collapsed={collapsed} />;
+      default: return <HomeSidebar collapsed={collapsed} />;
     }
   };
 

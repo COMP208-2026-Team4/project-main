@@ -14,7 +14,7 @@ const Logo: React.FC = () => {
 
   return (
     <div className="size-16 grid place-self-start">
-      <Link to="/" className="place-self-center">
+      <Link to="/dashboard" className="place-self-center">
         <div
           ref={logoRef}
           className="relative size-10 m-auto"

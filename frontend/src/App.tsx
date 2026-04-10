@@ -36,9 +36,9 @@ const App: React.FC = () => {
 
       {/* Protected routes - share Layout (Navbar + Sidebar) */}
       <Route element={<Layout />}>
+        <Route path="/:userId" element={<UserPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/:userId" element={<UserPage />} />
           <Route path="/:userId/:repoId/kanban" element={<KanbanPage />} />
           <Route path="/:userId/:repoId/repo" element={<RepoPage />} />
           <Route path="/:userId/:repoId/repo/commits" element={<CommitsPage />} />

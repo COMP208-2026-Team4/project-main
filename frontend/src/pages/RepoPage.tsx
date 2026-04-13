@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Star,
@@ -51,6 +51,7 @@ const relativeTime = (epochSeconds: number) => {
 const RepoPage: React.FC = () => {
   const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
   const dispatch = useDispatch() as any;
+  const navigate = useNavigate();
   const git = useSelector((s: Store.AppState) => s.entities.git);
   const user = useSelector(selectUser);
 
@@ -400,6 +401,10 @@ const RepoPage: React.FC = () => {
           repo={repoId}
           meta={git.meta}
           onClose={() => setShowSettings(false)}
+          onDeleted={() => {
+            setShowSettings(false);
+            navigate(`/${userId}`);
+          }}
         />
       )}
     </>

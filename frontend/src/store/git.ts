@@ -376,6 +376,26 @@ export const fetchCommitPreview = (
   }));
 };
 
+export const deleteRepository = (
+  owner: string,
+  repo: string,
+  onSuccess?: () => void,
+  onError?: (resp: any) => void,
+) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}`,
+    method: 'delete',
+    headers: getHeaders(),
+    callback: () => {
+      if (onSuccess) onSuccess();
+    },
+    errorCallback: (resp: any) => {
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to delete repository'));
+      if (onError) onError(resp);
+    },
+  }));
+};
+
 export const deleteBlob = (
   owner: string,
   repo: string,

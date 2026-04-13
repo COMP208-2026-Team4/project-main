@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Search,
   Plus,
@@ -12,8 +12,10 @@ import Logo from "./Logo";
 import UserMenu from "./UserMenu";
 import CreateRepoDropdown from "./CreateRepoDropdown";
 import { selectUser } from "../store/auth";
+import { setOpen as setSearchOpen } from "../store/search";
 
 const Navbar: React.FC = () => {
+  const dispatch = useDispatch();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [createRepoOpen, setCreateRepoOpen] = useState(false);
   const userMenuBtnRef = useRef<HTMLButtonElement>(null);
@@ -28,7 +30,9 @@ const Navbar: React.FC = () => {
         {/* Left */}
         <Logo />
         {/* Center */}
-        <button className="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 text-black/60 hover:bg-black/8 hover:dark:bg-white/10 dark:text-white/60 w-full grid grid-cols-[auto_1fr_auto] items-center cursor-pointer">
+        <button
+          onClick={() => dispatch(setSearchOpen(true))}
+          className="p-2 rounded-md bg-clip-padding border border-black/20 dark:border-white/20 text-black/60 hover:bg-black/8 hover:dark:bg-white/10 dark:text-white/60 w-full grid grid-cols-[auto_1fr_auto] items-center cursor-pointer">
           <div className="size-5" />
           <div className="leading-5">
             Type{" "}

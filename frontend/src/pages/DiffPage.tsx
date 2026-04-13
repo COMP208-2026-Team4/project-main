@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye } from "lucide-react";
 import Sidebar from "../components/Sidebar";
+import CommitPreviewModal from "../components/CommitPreviewModal";
 import { fetchDiff } from "../store/git";
 
 const formatDate = (epochSeconds: number) =>
@@ -21,6 +22,7 @@ const DiffPage: React.FC = () => {
   const dispatch = useDispatch() as any;
   const diff = useSelector((s: Store.AppState) => s.entities.git.diff);
   const loading = useSelector((s: Store.AppState) => s.entities.git.loading);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (userId && repoId && sha)
@@ -40,6 +42,14 @@ const DiffPage: React.FC = () => {
           </Link>
           <span className="opacity-50">/</span>
           <span className="font-mono font-bold">{sha?.slice(0, 8)}</span>
+          <span className="flex-1" />
+          <button
+            onClick={() => setShowPreview(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium transition-colors cursor-pointer"
+          >
+            <Eye className="size-4" />
+            Explore Branch
+          </button>
         </div>
 
         {/* Commit metadata */}
@@ -74,6 +84,15 @@ const DiffPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {showPreview && userId && repoId && sha && (
+        <CommitPreviewModal
+          owner={userId}
+          repo={repoId}
+          sha={sha}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
     </>
   );
 };

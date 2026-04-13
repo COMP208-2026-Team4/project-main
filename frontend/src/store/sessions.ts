@@ -8,8 +8,8 @@ const slice = createSlice({
   initialState: [] as Store.AppState['entities']['sessions'],
   reducers: {
     // fetch all users from API
-    fetched: (users, { payload }: Store.Action<Entity.User[]>) => {
-      users.push(...payload.filter(notInArray(users)));
+    fetched: (sessions, { payload }: Store.Action<Entity.Session[]>) => {
+      sessions.push(...payload.filter(notInArray(sessions)));
     }
   },
 });

@@ -16,6 +16,7 @@ import express from "express";
 import cors from "cors";
 import usersRouter from "./api/users";
 import oauthRouter from "./api/oauth";
+import searchRouter from "./api/search";
 
 async function startServer() {
   const app = express();
@@ -28,6 +29,7 @@ async function startServer() {
 
   app.use("/users", usersRouter);
   app.use("/auth", oauthRouter);
+  app.use("/search", searchRouter);
 
   app.get("/health", (_req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });

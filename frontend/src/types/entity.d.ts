@@ -21,6 +21,10 @@ namespace Entity {
     name: string;
     owner: string;
     createdAt: string;
+    visibility: string;
+    description: string;
+    starCount: number;
+    updatedAt: string;
   }
 
   class Branch {
@@ -59,5 +63,46 @@ namespace Entity {
     message: string;
     stats: { filesChanged: number; insertions: number; deletions: number };
     diff: string;
+  }
+
+  class RepoMeta {
+    visibility: string;
+    description: string;
+    starCount: number;
+    starredByMe: boolean;
+    collaborators: string[];
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  class SearchResult {
+    type: 'user' | 'repo' | 'commit';
+    // user fields
+    id?: string;
+    username?: string;
+    avatarUrl?: string;
+    // repo fields
+    owner?: string;
+    name?: string;
+    description?: string;
+    visibility?: string;
+    starCount?: number;
+    // commit fields
+    repo?: string;
+    sha?: string;
+    author?: string;
+    message?: string;
+  }
+
+  class CommitPreview {
+    sha: string;
+    authorName: string;
+    authorEmail: string;
+    timestamp: number;
+    message: string;
+    branches: string[];
+    diffStat: string;
+    diff: string;
+    tree: TreeEntry[];
   }
 }

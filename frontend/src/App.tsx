@@ -14,6 +14,7 @@ import DiffPage from "./pages/DiffPage";
 import TicketsPage from "./pages/TicketsPage";
 import TimerPage from "./pages/TimerPage";
 import UserPage from "./pages/UserPage";
+import CommandPalette from "./components/CommandPalette";
 import { fetchMe } from "./store/auth";
 import { token } from "./store/utils/rest-headers";
 
@@ -28,6 +29,8 @@ const App: React.FC = () => {
   }, []);
 
   return (
+    <>
+    <CommandPalette />
     <Routes>
       {/* Public routes (no layout chrome) */}
       <Route path="/" element={<LandingPage />} />
@@ -49,6 +52,7 @@ const App: React.FC = () => {
         </Route>
       </Route>
     </Routes>
+    </>
   );
 };
 

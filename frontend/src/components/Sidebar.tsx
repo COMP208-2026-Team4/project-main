@@ -22,9 +22,7 @@ interface SidebarProps { variant?: "home" | "kanban" | "repo" | "tickets" | "tim
 interface CollapsibleProps { collapsed: boolean; }
 
 const navClasses = (collapsed: boolean, extra = "") =>
-  `gap-2 rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full flex items-center ${
-    (collapsed) ? "" : ""
-  } ${extra}`.trim();
+  `${collapsed ? "" : "gap-2"} rounded-lg hover:bg-black/8 hover:dark:bg-white/10 py-1 px-2 w-full flex items-center ${extra}`.trim();
 
 const labelClasses = (collapsed: boolean) =>
   `whitespace-nowrap overflow-hidden transition-[opacity,max-width] duration-300 ${

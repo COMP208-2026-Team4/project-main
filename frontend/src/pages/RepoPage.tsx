@@ -14,11 +14,14 @@ import {
   Scale,
   Plus,
   ArrowLeft,
+  Settings,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import FileEditorModal from "../components/FileEditorModal";
 import BranchDropdown from "../components/BranchDropdown";
-import { fetchBranches, fetchCommits, fetchTree, fetchBlob, actions as gitActions } from "../store/git";
+import RepoSettings from "../components/RepoSettings";
+import { selectUser } from "../store/auth";
+import { fetchBranches, fetchCommits, fetchTree, fetchBlob, fetchMeta, starRepo, unstarRepo, actions as gitActions } from "../store/git";
 import { renderMarkdown, findReadme, findLicense } from "../lib/markdown";
 
 const SkeletonFileRow: React.FC<{ icon: React.ReactNode }> = ({ icon }) => (
@@ -49,16 +52,22 @@ const RepoPage: React.FC = () => {
   const { userId, repoId } = useParams<{ userId: string; repoId: string }>();
   const dispatch = useDispatch() as any;
   const git = useSelector((s: Store.AppState) => s.entities.git);
+  const user = useSelector(selectUser);
 
   const [selectedBranch, setSelectedBranch] = useState("main");
   const [currentPath, setCurrentPath] = useState("");
   const [showEditor, setShowEditor] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  const isOwner = user?.username?.toLowerCase() === userId?.toLowerCase()
+    || user?.id === userId;
 
   const refresh = () => {
     if (!userId || !repoId) return;
     dispatch(fetchBranches(userId, repoId));
     dispatch(fetchTree(userId, repoId, selectedBranch, currentPath));
     dispatch(fetchCommits(userId, repoId, selectedBranch, 1));
+    dispatch(fetchMeta(userId, repoId));
   };
 
   useEffect(() => {
@@ -122,15 +131,60 @@ const RepoPage: React.FC = () => {
             </Link>
             <span className="opacity-50">/</span>
             <span className="font-bold">{repoId}</span>
+            {git.meta ? (
+              (() => {
+                const isPublic = git.meta.visibility?.toLowerCase() === "public";
+                return (
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+                      isPublic
+                        ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-700"
+                        : "bg-slate-100 text-slate-600 border-slate-300 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-600"
+                    }`}
+                    aria-label={`Repository visibility: ${isPublic ? "public" : "private"}`}
+                    title={`This repository is ${isPublic ? "public" : "private"}`}
+                  >
+                    {isPublic ? "Public" : "Private"}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className="text-xs opacity-40 italic">Visibility unknown</span>
+            )}
           </div>
-          <div className="grid grid-flow-col gap-[1px] place-self-end my-auto">
-            <button className="py-1 px-3 rounded-l-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
-              <Star className="size-5" />
-              <span className="font-bold">Star</span>
-            </button>
-            <button className="py-1 px-3 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
-              <span className="font-bold">{git.branches.length}</span>
-            </button>
+          <div className="grid grid-flow-col gap-2 place-self-end my-auto">
+            {isOwner && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className="py-1 px-3 rounded-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2"
+                aria-label="Repository settings"
+              >
+                <Settings className="size-4" />
+              </button>
+            )}
+            <div className="grid grid-flow-col gap-[1px]">
+              <button
+                onClick={() => {
+                  if (!userId || !repoId || !user) return;
+                  if (git.meta?.starredByMe) {
+                    dispatch(unstarRepo(userId, repoId));
+                  } else {
+                    dispatch(starRepo(userId, repoId));
+                  }
+                }}
+                className={`py-1 px-3 rounded-l-lg cursor-pointer grid grid-flow-col place-items-center gap-2 ${
+                  git.meta?.starredByMe
+                    ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-400"
+                    : "bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30"
+                }`}
+              >
+                <Star className={`size-5 ${git.meta?.starredByMe ? "fill-current" : ""}`} />
+                <span className="font-bold">Star</span>
+              </button>
+              <button className="py-1 px-3 rounded-r-lg bg-black/20 hover:bg-black/30 dark:bg-white/20 hover:dark:bg-white/30 cursor-pointer grid grid-flow-col place-items-center gap-2">
+                <span className="font-bold">{git.meta?.starCount ?? 0}</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -280,7 +334,10 @@ const RepoPage: React.FC = () => {
         <div className="border-l border-black/20 dark:border-white/20 h-full w-80 p-4 flex flex-col gap-2">
           <div>
             <h4 className="font-bold">Project information</h4>
-            A Cone project.
+            {git.meta?.description
+              ? <p className="text-sm mt-1">{git.meta.description}</p>
+              : <p className="text-sm mt-1 text-black/40 dark:text-white/40 italic">No description provided.</p>
+            }
           </div>
           <hr className="border-black/20 dark:border-white/20 rounded-full my-1" />
           <Link
@@ -334,6 +391,15 @@ const RepoPage: React.FC = () => {
           mode="create"
           onClose={() => setShowEditor(false)}
           onSaved={refresh}
+        />
+      )}
+
+      {showSettings && userId && repoId && git.meta && (
+        <RepoSettings
+          owner={userId}
+          repo={repoId}
+          meta={git.meta}
+          onClose={() => setShowSettings(false)}
         />
       )}
     </>

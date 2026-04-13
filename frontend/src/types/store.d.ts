@@ -20,6 +20,15 @@ declare namespace Store {
     diff: Entity.CommitDiff | null;
     loading: boolean;
     error: string | null;
+    meta: Entity.RepoMeta | null;
+    commitPreview: Entity.CommitPreview | null;
+  }
+
+  interface SearchState {
+    query: string;
+    results: Entity.SearchResult[];
+    loading: boolean;
+    open: boolean;
   }
 
   export interface AppState {
@@ -31,6 +40,7 @@ declare namespace Store {
       users: Entity.User[];
       sessions: Entity.Session[];
       git: GitState;
+      search: SearchState;
     };
   }
 

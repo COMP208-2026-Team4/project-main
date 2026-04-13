@@ -12,6 +12,8 @@ const initialState: Store.GitState = {
   diff: null,
   loading: false,
   error: null,
+  meta: null,
+  commitPreview: null,
 };
 
 const slice = createSlice({
@@ -43,6 +45,12 @@ const slice = createSlice({
     },
     setError: (state, { payload }: PayloadAction<string | null>) => {
       state.error = payload;
+    },
+    metaFetched: (state, { payload }: PayloadAction<Entity.RepoMeta | null>) => {
+      state.meta = payload;
+    },
+    commitPreviewFetched: (state, { payload }: PayloadAction<Entity.CommitPreview | null>) => {
+      state.commitPreview = payload;
     },
   },
 });
@@ -232,6 +240,139 @@ export const updateBlob = (
     data: payload,
     callback,
     errorCallback,
+  }));
+};
+
+export const fetchMeta = (owner: string, repo: string) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/meta`,
+    method: 'get',
+    headers: getHeaders(),
+    callback: (data: any) => {
+      dispatch(actions.metaFetched({
+        visibility: data?.visibility ?? 'public',
+        description: data?.description ?? '',
+        starCount: data?.star_count ?? 0,
+        starredByMe: data?.starred_by_me ?? false,
+        collaborators: data?.collaborators ?? [],
+        createdAt: data?.created_at ?? '',
+        updatedAt: data?.updated_at ?? '',
+      }));
+    },
+    errorCallback: () => dispatch(actions.metaFetched(null)),
+  }));
+};
+
+export const updateSettings = (
+  owner: string,
+  repo: string,
+  settings: { visibility?: string; description?: string },
+  callback?: () => void,
+) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/settings`,
+    method: 'put',
+    headers: getHeaders(),
+    data: settings,
+    callback: () => {
+      dispatch(fetchMeta(owner, repo));
+      if (callback) callback();
+    },
+    errorCallback: (resp: any) =>
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to update settings')),
+  }));
+};
+
+export const starRepo = (owner: string, repo: string) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/star`,
+    method: 'post',
+    headers: getHeaders(),
+    callback: () => dispatch(fetchMeta(owner, repo)),
+    errorCallback: (resp: any) =>
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to star')),
+  }));
+};
+
+export const unstarRepo = (owner: string, repo: string) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/star`,
+    method: 'delete',
+    headers: getHeaders(),
+    callback: () => dispatch(fetchMeta(owner, repo)),
+    errorCallback: (resp: any) =>
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to unstar')),
+  }));
+};
+
+export const addCollaborator = (
+  owner: string,
+  repo: string,
+  userId: string,
+  callback?: () => void,
+  errorCallback?: (resp: any) => void,
+) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/collaborators`,
+    method: 'post',
+    headers: getHeaders(),
+    data: { user_id: userId },
+    callback: () => {
+      dispatch(fetchMeta(owner, repo));
+      if (callback) callback();
+    },
+    errorCallback,
+  }));
+};
+
+export const removeCollaborator = (
+  owner: string,
+  repo: string,
+  userId: string,
+  callback?: () => void,
+) => (dispatch: any) => {
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/collaborators/${userId}`,
+    method: 'delete',
+    headers: getHeaders(),
+    callback: () => {
+      dispatch(fetchMeta(owner, repo));
+      if (callback) callback();
+    },
+    errorCallback: (resp: any) =>
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to remove collaborator')),
+  }));
+};
+
+export const fetchCommitPreview = (
+  owner: string,
+  repo: string,
+  sha: string,
+) => (dispatch: any) => {
+  dispatch(actions.setLoading(true));
+  dispatch(api.restCallBegan({
+    url: `/repositories/${owner}/${repo}/commits/${sha}/preview`,
+    method: 'get',
+    headers: getHeaders(),
+    callback: (data: any) => {
+      dispatch(actions.commitPreviewFetched({
+        sha: data?.sha ?? sha,
+        authorName: data?.author_name ?? '',
+        authorEmail: data?.author_email ?? '',
+        timestamp: data?.timestamp ?? 0,
+        message: data?.message ?? '',
+        branches: data?.branches ?? [],
+        diffStat: data?.diff_stat ?? '',
+        diff: data?.diff ?? '',
+        tree: data?.tree ?? [],
+      }));
+      dispatch(actions.setLoading(false));
+    },
+    errorCallback: (resp: any) => {
+      dispatch(actions.commitPreviewFetched(null));
+      dispatch(actions.setError(resp?.data?.error ?? 'Failed to fetch commit preview'));
+      dispatch(actions.setLoading(false));
+    },
   }));
 };
 

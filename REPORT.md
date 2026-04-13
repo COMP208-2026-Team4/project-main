@@ -226,3 +226,6 @@ Backend returned `502 Bad Gateway`, so no CORS headers were included.
 ## Conclusion
 
 Although development was straightforward, deployment required significant effort due to hidden complexities in system integration. The transition to containerisation and a monorepo architecture ultimately resulted in a more robust and maintainable system.
+
+---
+

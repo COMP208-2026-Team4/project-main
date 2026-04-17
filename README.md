@@ -8,3 +8,6 @@ What we need to submit as a team:
 - Some sample screenshots of the application
 
 **Source**: https://canvas.liverpool.ac.uk/courses/86513/pages/project-portfolios
+
+Mock UI designed & developed by Aron:
+- https://github.com/abachrati/mock

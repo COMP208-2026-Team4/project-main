@@ -1,3 +1,16 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
 TLDR: Due to the decentralised nature of the app, and the pain of individually setting up each project, and also the intricacies of cross-platform deployment, we ultimately chose Docker to handle all this.
 
 Also there have been pervasive CORS issues when using Docker.
